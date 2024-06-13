@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./libs/dygraph.css">
+    <link rel="stylesheet" href="./style.css">
+    <script src="./libs/socket.io.min.js"></script>
+    <script src="./libs/plotly-2.32.0.min.js"  charset="utf-8"></script>
+    <script src="./libs/dygraph.min.js"></script>
+    <title>Electrolizador PEM</title>
+</head>
+<body>
+    <div class="ecena" id="planta3D" style="width: 100%; height: 100%">
+    </div>
+    <div class="GUI_conten", id="gui">
+        <div class="conten_set_info" id="conten_set_info">
+        </div>
+    </div>
+    <div class="info_conten debug info_des" id="info" onclick="show_terminal();" style="z-index: 100000;">
+        <h4 id="info_type"></h4>
+        <h3 id="info_mensaje"></h3>
+        <div class="Terminal_conten" id="Terminal_conten" style="display: none;"></div>
+    </div>
+    <img src="./assets/logo.png" alt="" style="width: 280px; position: absolute; top: 0px; left: 0px;user-select: none;">
+    <script>
+        var plat_app=null;
+        var terminal=null;
+        var plantadata={};
+        var ventanas={};
+        const div_3D_plant =  document.getElementById('planta3D');
+        const socket = io({
+            autoConnect: false
+        });
+        // Definir mapeo de propiedades y su configuración
+        const propiedades = {
+            'T': { name: 'Temperatura', unidad: '°C', to: value => (value - 273.15) },
+            'P': { name: 'Presión', unidad: 'bar', to: value => (value * 1e-5) },
+            'F': { name: 'Flujo molar', unidad: 'kmol/h', to: value => (value * 3600 / 1000) },
+            'W': { name: 'Flujo masico', unidad: 'kg/h', to: value => (value * 3600 / 1000) },
+            'I': { name: 'Corriente', unidad: 'A', to: value => (value) },
+            'V': { name: 'Voltaje', unidad: 'V', to: value => (value) },
+            'q': { name: 'Fracción de vapor', unidad: '% mol/mol', to: value => (value*100)},
+            'presion_anodo': { name: 'Presión del ánodo', unidad: 'bar', to: value => (value * 1e-5) },
+            'presion_catodo': { name: 'Presión del cátodo', unidad: 'bar', to: value => (value * 1e-5) },
+            'Tin'   : { name: 'T. entrada tubos', unidad: '°C', to: value => (value - 273.15) },
+            'TCwin' : { name: 'T. entrada coraza', unidad: '°C', to: value => (value - 273.15) },
+            'Tout'  : { name: 'T. salida tubos', unidad: '°C', to: value => (value - 273.15) },
+            'TCwout': { name: 'T. salida coraza', unidad: '°C', to: value => (value - 273.15) },
+            'duty'  : { name: 'Calor total tranferido', unidad: 'kJ', to: value => (value/1000) },
+        };
+    </script>
+    <script  type="importmap">{
+        "imports": {
+            "three": "https://threejs.org/build/three.module.js",
+            "three/addons/": "https://threejs.org/examples/jsm/"
+        }}
+    </script>
+    <script type="module">
+        import { app } from './libs/plant3Dapp.js';
+        import { Terminal } from './libs/terminal.js';
+
+        terminal = new Terminal.TerminalConstructor('Terminal_conten');
+        terminal.setHeight("200px");
+        terminal.setWidth('600px');
+        terminal.setBackgroundColor="#18222c";
+
+        document.getElementsByClassName('Terminal')[0].addEventListener('click', function(event){
+            event.preventDefault();
+        });
+
+        plat_app = new app.planta3D();
+        plat_app.load(
+            div_3D_plant,
+            document.getElementById('gui')
+        );
+
+    </script>
+    <script src="./libs/script.js"></script>
+    <script src="./libs/dinamico.js"></script>
+</body>
+</html>
