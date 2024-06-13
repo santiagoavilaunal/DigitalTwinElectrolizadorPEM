@@ -1,10 +1,4 @@
-Documento/build/*
-!Documento/build/*.pdf
 .vscode/*
-Documento/*.bat
-Diagramas/*
-!Diagramas/*.dwg
-!Diagramas/*.pdf
 *.pyc
 .idx/*
 .venv/*
