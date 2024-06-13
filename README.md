@@ -1,2 +1,2 @@
 # Gemelo Digital Electrolizador PEM
-Gemelo digital de electrolizador
+Gemelo digital de un electrolizador
