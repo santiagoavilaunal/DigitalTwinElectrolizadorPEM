@@ -12,8 +12,7 @@
     idx = {
         workspace = {
             onCreate = {
-                python-vent-install = "python -m venv .venv";
-                python-vent-install-packages = "source .venv/bin/activate && pip install -r requirements.txt";
+                python-vent-install = "python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt";
             };
             onStart = {
                 python-start = "source .venv/bin/activate";
