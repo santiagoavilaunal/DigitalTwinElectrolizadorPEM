@@ -10,6 +10,7 @@
         pkgs.python311Packages.virtualenv
     ]; 
     idx = {
+        extensions = [ "ms-python.python"  "ms-python.debugpy"];
         workspace = {
             onCreate = {
                 python-vent-install = "python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt";
