@@ -1,6 +1,6 @@
 # Desarrollo de un Gemelo Digital para un Electrolizador de Membrana de Intercambio de Protones (PEM)
 
-[![Ejecutar en Google Project IDX](link_al_boton)](https://project-idx-url)
+Este proyecto permite desarrollar y simular un gemelo digital de un electrolizador de membrana de intercambio de protones (PEM). Puedes ejecutar el código utilizando Google Project IDX:
 
 <a href="https://idx.google.com/import?url=https%3A%2F%2Fgithub.com%2Fsantiagoavilaunal%2FDigitalTwinElectrolizadorPEM">
   <img
