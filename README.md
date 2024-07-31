@@ -17,7 +17,7 @@ El objetivo principal de este proyecto es el desarrollo de un gemelo digital par
 
 - **Simulación Específica:** Se empleó el paquete termodinámico Coolprop para determinar las propiedades térmicas y de equilibrio de solubilidad, evitando simplificaciones idealizadas del sistema.
 - **Ajuste de Parámetros:** Se ajustaron algunos parámetros de interacción binaria para modelar los equipos de separación de fase y se reajustaron los parámetros en el modelo de cinética electroquímica basándose en datos proporcionados por Espinosa y diversas fuentes bibliográficas.
-- **Dimensionamiento de Equipos:** Se dimensionaron los equipos de separación de fases, como el intercambiador de calor.
+- **Dimensionamiento de Equipos:** Se dimensionaron los equipos de separación de fases y el intercambiador de calor.
 - **Evaluación del Desempeño:** Se evaluó el desempeño del simulador en diversas condiciones mediante un análisis de sensibilidad en estado estacionario.
 - **Control Dinámico:** Se exploró el uso de un controlador PID con el modelo dinámico.
 
