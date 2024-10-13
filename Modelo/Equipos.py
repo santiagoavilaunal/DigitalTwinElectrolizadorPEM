@@ -6,8 +6,6 @@ import numpy as np
 import scipy.optimize as sop
 import scipy.integrate as sint
 import json
-import torch
-import torch.nn as nn
 from Modelo.Socket_logger import SocketLogger
 
 jo_an2=7.3849e-09
@@ -923,7 +921,7 @@ class IntercambiadorCalor:
             error=np.array([self.flujos[0][1].T - sol.y[1][-1], self.flujos[0][1].P - sol.y[-1][-1]])
             return [self.flujos[0][1].T - sol.y[1][-1], self.flujos[0][1].P - sol.y[-1][-1]]
 
-        Y = sop.fsolve(Tsol, x0=[(self.flujos[0][0].T*self.flujos[0][0].F + self.flujos[0][1].T*self.flujos[0][1].F) / (self.flujos[0][1].F+self.flujos[0][0].F), self.flujos[0][1].P])
+        Y = sop.fsolve(Tsol, x0=[(self.flujos[0][0].T*self.flujos[0][0].F + self.flujos[0][1].T*self.flujos[0][1].F) / (self.flujos[0][1].F+self.flujos[0][0].F), self.flujos[0][1].P], xtol=1e-10)
         sol = sint.solve_ivp(sistema_ecuaciones, [0,self.L], [self.flujos[0][0].T, Y[0], self.flujos[0][0].P, Y[1]], t_eval=t_eval_i)
         self.Temperatura_data=[sol.y,sol.t]
 
