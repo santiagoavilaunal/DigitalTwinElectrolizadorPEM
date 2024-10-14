@@ -4,6 +4,12 @@ window.onresize = (ev) => {
     plat_app.renderer.setSize( div_3D_plant.clientWidth, div_3D_plant.clientHeight);
 };
 
+window.addEventListener('keydown',function(event){
+    if(event.code==='Escape'){
+
+    }
+})
+
 const conten_set_info=document.getElementById('conten_set_info');
 
 //plat_app.controls.enabled=true
@@ -65,7 +71,7 @@ function crear_input_value(){
         // Crear el elemento div principal con sus atributos
         let itemInfoDiv = document.createElement('div');
         itemInfoDiv.classList.add('item_info'); 
-        itemInfoDiv.style.borderColor = item.color; 
+        itemInfoDiv.style.borderColor = item.color;
 
         // Crear el elemento h1 dentro del div
 
@@ -76,16 +82,11 @@ function crear_input_value(){
             h1.classList.add('click_item_info');
             h1.innerHTML=item.incoText;
             h1.style.width='40px';
-            h1.style.margin='0px';
-            h1.addEventListener('mouseenter', function() {
-                plat_app.controls.enabled = false;
-            });
-            
-            h1.addEventListener('mouseleave', function() {
-                plat_app.controls.enabled = false;
-            });
-            
+            h1.style.margin='0px';            
             h1.addEventListener('click', item.fun);
+            h1.addEventListener('mouseenter', (event)=>{
+                plat_app.controls.enabled=false;
+            });
         }else{
             h1.textContent = item.incoText; 
         }
@@ -96,7 +97,8 @@ function crear_input_value(){
 
         // Crear el elemento h4 dentro del div secundario
         let h4 = document.createElement('h4');
-        h4.textContent = item.Title; 
+        h4.textContent = item.Title;
+        // h4.style.userSelect='none';
 
         // Crear el elemento input dentro del div secundario
         let input = document.createElement('input');
@@ -561,10 +563,7 @@ function crear_ventana(elemento,type){
 
     ventanaTituloDiv.addEventListener('mousedown', function(event) {
         plat_app.controls.enabled=false;
-        ventanas[type][elemento].elemento.style.cursor = 'move';
         ventanas[type][elemento].isDragging = true;
-        ventanas[type][elemento].mx0 = event.clientX - ventanas[type][elemento].x;
-        ventanas[type][elemento].my0 = event.clientY - ventanas[type][elemento].y;
     });
 
     ventanaTituloDiv.addEventListener('mouseup', function(event) {
@@ -572,16 +571,15 @@ function crear_ventana(elemento,type){
         ventanas[type][elemento].elemento.style.cursor = 'default';
     });
 
-    ventanaTituloDiv.addEventListener('mousemove', function(event) {
-        if (ventanas[type][elemento].isDragging) {
-            event.preventDefault();
-            event.stopPropagation();
-            ventanas[type][elemento].x = event.clientX - ventanas[type][elemento].mx0;
-            ventanas[type][elemento].y = event.clientY - ventanas[type][elemento].my0;
-            ventanas[type][elemento].elemento.style.left = ventanas[type][elemento].x + 'px';
-            ventanas[type][elemento].elemento.style.top = ventanas[type][elemento].y + 'px';
+    ventanaTituloDiv.addEventListener('mousemove',function(event){
+        if(ventanas[type][elemento].isDragging){
+            ventanas[type][elemento].elemento.style.cursor = 'move';
         }
     });
+
+    $(ventanaDiv).draggable({ handle: ventanaTituloDiv});
+
+    ventanaDiv.style.position='absolute';
 
     ventanaTituloDiv.classList.add('ventana_titulo');
 

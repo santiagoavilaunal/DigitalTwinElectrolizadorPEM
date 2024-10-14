@@ -289,6 +289,9 @@ class Planta:
                 for traza in self.equipos[equipo].dinamico[key]['trazas']:
                     traza['x']=[]
                     traza['y']=[]
+        
+        for loop in self.loops.keys():
+            self.loops[loop]=False
 
 
     def printData(self):

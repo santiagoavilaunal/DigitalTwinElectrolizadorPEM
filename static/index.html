@@ -8,13 +8,16 @@
     <script src="./libs/socket.io.min.js"></script>
     <script src="./libs/plotly-2.32.0.min.js"  charset="utf-8"></script>
     <script src="./libs/dygraph.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.0/jquery-ui.min.js" integrity="sha512-MlEyuwT6VkRXExjj8CdBKNgd+e2H+aYZOCUaCrt9KRk6MlZDOs91V1yK22rwm8aCIsb5Ec1euL8f0g58RKT/Pg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.14.0/themes/base/jquery-ui.min.css" integrity="sha512-F8mgNaoH6SSws+tuDTveIu+hx6JkVcuLqTQ/S/KJaHJjGc8eUxIrBawMnasq2FDlfo7FYsD8buQXVwD+0upbcA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>Electrolizador PEM</title>
 </head>
 <body>
     <div class="ecena" id="planta3D" style="width: 100%; height: 100%">
     </div>
     <div class="GUI_conten", id="gui">
-        <div class="conten_set_info" id="conten_set_info">
+        <div class="conten_set_info" id="conten_set_info", style="user-select: none;">
         </div>
     </div>
     <div class="info_conten debug info_des" id="info" onclick="show_terminal();" style="z-index: 100000;">
