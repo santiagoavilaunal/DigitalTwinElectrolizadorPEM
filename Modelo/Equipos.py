@@ -169,8 +169,11 @@ class ElectrolizadorPEM:
         y2 = s_an['c'][0]
 
         # Crear sistemas de flujo líquido con fracciones molares
-        s_ca = Sistema(self.T, self.presion_catodo, ['H2O', 'O2'], z=y1, fase='Liq')
-        s_an = Sistema(self.T, self.presion_anodo, ['H2O', 'H2'], z=y2, fase='Liq')
+        EOS_ca=Sistema(['H2O', 'O2'],phase='Liq')
+        s_ca=EOS_ca.update(self.T, self.presion_catodo,z=y1)
+
+        EOS_an=Sistema(['H2O', 'H2'],phase='Liq')
+        s_an = EOS_an.update(self.T, self.presion_anodo,z=y2)
 
         # Calcular coeficiente de fugacidad
         phi = np.array([s_ca['phi'][0], s_an['phi'][1], s_ca['phi'][1]])
@@ -191,8 +194,11 @@ class ElectrolizadorPEM:
         y2 = s_an['c'][0]
 
         # Crear sistemas de flujo líquido con fracciones molares
-        s_ca = Sistema(self.T, self.presion_catodo, ['H2O', 'O2'], z=y1, fase='Liq')
-        s_an = Sistema(self.T, self.presion_anodo, ['H2O', 'H2'], z=y2, fase='Liq')
+        EOS_ca=Sistema(['H2O', 'O2'],phase='Liq')
+        s_ca=EOS_ca.update(self.T, self.presion_catodo,z=y1)
+
+        EOS_an=Sistema(['H2O', 'H2'],phase='Liq')
+        s_an = EOS_an.update(self.T, self.presion_anodo,z=y2)
 
         # Calcular coeficiente de fugacidad
         phi = np.array([s_ca['phi'][0], s_an['phi'][1], s_ca['phi'][1]])
