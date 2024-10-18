@@ -644,6 +644,8 @@ function show_data_ventana(elemento,type,add=true){
         valve_slider(contenedorDiv, plantadata.Valvulas[elemento]);
     }else if(type==5){
         crear_dinamico_Ventana(plantadata.Equipos[elemento],contenedorDiv);
+    }else if(type==6){
+        crear_PID_ventana(contenedorDiv);
     }
 
     if(ventanas[type][elemento].y+ventanas[type][elemento].elemento.getBoundingClientRect().height > window.innerHeight){
@@ -857,3 +859,22 @@ socket.on("valve", (data) => {
     let bulletPosition = (data_serializada.apertura /rsRangeLine.max);
     ventanas[4][data_serializada.name]['bullet'].style.left = (bulletPosition * 578) + "px";
 });
+
+
+function crear_PID_ventana(contenedorDiv){
+
+    if(pid===null){
+        let PID_layout_diagram_element=document.createElement('div');
+        PID_layout_diagram_element.classList.add('PID-layout-diagram');
+        PID_layout_diagram_element.id='pid-ventana';
+
+        contenedorDiv.appendChild(PID_layout_diagram_element);
+
+        pid=new PIDDiagram('pid-ventana',true);
+        pid.loadData('./assets/planta.json','./libs/PIDjs/symbols');
+        
+    }else{
+        contenedorDiv.appendChild(pid.containerElement);
+    }
+
+}
