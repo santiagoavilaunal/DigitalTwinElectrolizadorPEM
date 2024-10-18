@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="5.5827098mm"
+   height="9.1253233mm"
+   viewBox="0 0 5.5827098 9.1253233"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <g
+     id="layer1"
+     transform="translate(-58.617299,-95.438596)">
+    <g
+       id="use1-1-1"
+       transform="matrix(0.26458333,0,0,0.26458333,66.828699,95.286857)"
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.1;stroke-dasharray:none;stroke-opacity:1">
+      <g
+         fill="none"
+         stroke-width="0.5"
+         id="g43-6"
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.1;stroke-dasharray:none;stroke-opacity:1"
+         transform="translate(-45.485204,-0.82700371)">
+        <path
+           d="M 25,17.405056 V 30"
+           id="path43-0"
+           style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:0.780766;stroke-dasharray:none;stroke-opacity:1" />
+        <rect
+           style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.1;stroke-dasharray:none;stroke-opacity:1"
+           id="rect54"
+           width="10.475381"
+           height="15.713071"
+           x="19.779963"
+           y="1.9504913"
+           ry="0" />
+        <path
+           style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.1;stroke-dasharray:none;stroke-opacity:1"
+           d="M 19.64114,9.11785 H 30.11652"
+           id="path55" />
+      </g>
+      <path
+         d="m -10.485204,34.172996 v -10 l -20,10 v -10 z"
+         stroke-width="0.5"
+         id="path46-5"
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.1;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
+  </g>
+</svg>

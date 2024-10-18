@@ -69,15 +69,25 @@ async def get_static_files(filename: str):
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
     
-@app.get("/libs/{filename}")
+ALLOWED_EXTENSIONS = {'.txt', '.pdf', '.jpg', '.png', '.js', '.css','.svg','.json'}
+
+@app.get("/libs/{filename:path}")
 async def get_static_files(filename: str):
     print(f'filename: {filename}')
+    
+    # Verifica que el archivo tenga una extensión permitida
+    ext = os.path.splitext(filename)[1]
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Tipo de archivo no permitido")
+    
+    # Intenta devolver el archivo si existe
+    file_path = os.path.join("static/libs", filename)
     try:
-        return FileResponse(f"static/libs/{filename}")
+        return FileResponse(file_path)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
 
-@app.get("/assets/{filename}")
+@app.get("/assets/{filename:path}")
 async def get_static_files(filename: str):
     print(f'filename: {filename}')
     try:
