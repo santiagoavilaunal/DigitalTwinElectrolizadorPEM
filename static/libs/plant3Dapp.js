@@ -97,12 +97,17 @@ var app={
 
         var scena_click= (event)=>{
 
-            desactivar_info(100);
-
             if(!this.controls.enabled){
                 this.controls.enabled=true;
             }
-            event.preventDefault()
+            event.preventDefault();
+
+            this.click();
+        }
+
+        this.click=()=>{
+
+            desactivar_info(100);
 
             if(INTERSECTED){
                 if (plantadata.Equipos && plantadata.Equipos[INTERSECTED.name]){
@@ -121,6 +126,7 @@ var app={
                     crear_ventana(INTERSECTED.name,4);
                 }
             }
+
         }
 
         var onDocumentMouseMove = ( event )=> {
@@ -162,15 +168,31 @@ var app={
             }else{
                 object_select=intersects[0].object;
             }
+
+            this.select(object_select, true);
         
+            return object_select;
+        }
+
+        this.select = (object_select, on_pid=false) =>{
+
             if(object_select){
                 if(INTERSECTED != object_select){
                     if(INTERSECTED){
                         objecto_emissive(INTERSECTED,0x000000);
                     }
+                    
+                    if(pid && on_pid){
+                        Object.keys(pid.equiments).forEach(equipo=>{pid_selec(equipo,false)});
+                    }
+
                     INTERSECTED = object_select;
                     this.equipo_hover=this.Scene_objects[INTERSECTED.name];
                     objecto_emissive(INTERSECTED,0x008a84);
+
+                    if(pid && on_pid){
+                        pid_selec(INTERSECTED.name);
+                    }
                 }
             }else{
                 if(INTERSECTED){
@@ -184,8 +206,6 @@ var app={
                     Infomación_Select(this.canvas_info,this.sprite_info,this.equipo_hover);
                 }
             }
-        
-            return object_select;
         }
 
         var animate = () => {

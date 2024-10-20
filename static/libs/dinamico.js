@@ -87,12 +87,13 @@ socket.on("dinamics_resultado", (data) => {
                     let elemento_name=key + '-grafica-dinamica-' + grafico;
                     actualizar_grafico(elemento_name, plantadata.Equipos[key].dinamico[grafico],plantadata.Equipos[key].name)
                 })
-            }else if(tipo==4 && ventanas[tipo][key].loop){
-                ventanas[4][key]['bullet'].innerHTML=plantadata.Valvulas[key].apertura.toFixed(0)+'%';
-                let rsRangeLine = ventanas[4][key]['slider'];
-                rsRangeLine.value=plantadata.Valvulas[key].apertura;
-                let bulletPosition = (plantadata.Valvulas[key].apertura /rsRangeLine.max);
-                ventanas[4][key]['bullet'].style.left = (bulletPosition * 578) + "px";
+            }else if(tipo==4 && ventanas[4][key]['activo']){
+
+                updatevaluevale(
+                    ventanas[4][key]['label'],
+                    ventanas[4][key]['slider'],
+                    plantadata.Valvulas[key].apertura
+                )
             }
         })
     });

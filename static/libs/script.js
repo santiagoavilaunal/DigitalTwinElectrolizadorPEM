@@ -192,7 +192,7 @@ function info_activador(data, descativar=true) {
         10: { 'name': 'Debug', style: 'debug' },
         20: { 'name': 'Info', style: 'info' },
         30: { 'name': 'Warning', style: 'warning' },
-        40: { 'name': 'Error', style: 'error' },
+        40: { 'name': 'Error', style: 'error' }, 
         50: { 'name': 'Critical', style: 'critical' },
         25: { 'name': 'Procesando', style: 'procesando' },
         26: { 'name': 'Cargando', style: 'debug' }
@@ -242,7 +242,6 @@ function desactivar_info(time=5000){
 
 socket.on("estacionario_resultado", (data) => {
     let data_serializada=JSON.parse(data);
-    console.log(data_serializada);
     if(!(data_serializada.error===undefined)){
         console.log(data_serializada.error);
         return;
@@ -748,116 +747,78 @@ function crear_grafico(elemento_name, config, listgrafic) {
 
 
 function valve_slider(container, data) {
-    var div = document.createElement('div');
-    div.style.display = 'flex';
-    div.style.justifyContent = 'center';
 
-    // Crear el elemento label
-    var label = document.createElement('label');
-    label.style.color = 'white';
-    label.textContent = 'Lazo abierto';
+    container.parentElement.style.width='200px';
+    container.parentElement.style.height='110px';
 
-    // Crear el elemento input
-    var input = document.createElement('input');
-    input.setAttribute('type', 'checkbox');
-
-    // Agregar el label y el input al div
-    div.appendChild(label);
-    div.appendChild(input);
-
-    // Agregar el div al contenedor
-    container.appendChild(div);
-    ventanas[4][data.name]['loop']=false;
-
-    // Agregar evento al checkbox
-    input.addEventListener('change', function() {
-
-        if (this.checked) {
-            label.textContent='Lazo cerrado';
-        } else {
-            label.textContent='Lazo abierto';
-        }
-        ventanas[4][data.name]['loop']=this.checked;
-
-        socket.emit("lazo", {
-            loop:data.name.replace("VC", ""),
-            value:this.checked
-        });
-    });
-    let containerSlider = document.createElement('div');
-    containerSlider.classList.add('container_slider');
-
-    let rangeSlider = document.createElement('div');
-    rangeSlider.classList.add('range-slider');
-
-    let rsBullet = document.createElement('span');
-    rsBullet.id = 'id_rs-bullet'; // Asignar el ID según el formato especificado
-    rsBullet.classList.add('rs-label');
-    rsBullet.textContent = '0';
+    let divcontenedor=document.createElement('div');
+    divcontenedor.classList.add('valve-range-div');
+    container.appendChild(divcontenedor);
 
     let rsRangeLine = document.createElement('input');
-    rsRangeLine.id = 'id_rs-range-line'; // Asignar el ID según el formato especificado
-    rsRangeLine.classList.add('rs-range');
+    rsRangeLine.classList.add('valve-range-input');
     rsRangeLine.setAttribute('type', 'range');
     rsRangeLine.setAttribute('value', '0');
     rsRangeLine.setAttribute('min', '0');
     rsRangeLine.setAttribute('max', '100');
-    rsRangeLine.setAttribute('step', '0.001');
+    rsRangeLine.setAttribute('step', '0.00001');
 
-    let boxMinMax = document.createElement('div');
-    boxMinMax.classList.add('box-minmax');
+    divcontenedor.appendChild(rsRangeLine);
 
-    let span0 = document.createElement('span');
-    span0.textContent = '0%';
+    let divtextconten=document.createElement('div');
+    divtextconten.className='valve-range-div-label-conten';
 
-    let spanApertura = document.createElement('span');
-    spanApertura.textContent = 'Apertura';
+    let h4label=document.createElement('h4');
+    h4label.textContent='Apertura:';
+    divtextconten.appendChild(h4label);
 
-    let span100 = document.createElement('span');
-    span100.textContent = '100%';
+    let h4label2=document.createElement('h4');
+    h4label2.textContent='0%';
+    divtextconten.appendChild(h4label2);
+
+    divcontenedor.appendChild(divtextconten);
 
     rsRangeLine.addEventListener("input", showSliderValue, false);
-    rsRangeLine.value=data.apertura
-    showSliderValue();
+    
+    updatevaluevale(
+        h4label2,
+        rsRangeLine,
+        data.apertura
+    )
 
     ventanas[4][data.name]['slider']=rsRangeLine;
-    ventanas[4][data.name]['bullet']=rsBullet;
+    ventanas[4][data.name]['label']=h4label2;
+    ventanas[4][data.name]['activo']=data.control.activo;
 
-    rsBullet.innerHTML=data.apertura.toFixed(0)
-    let bulletPosition = (data.apertura/rsRangeLine.max);
-    rsBullet.style.left = (bulletPosition * 578) + "px";
+    showSliderValue();
+
+    // rsBullet.innerHTML=data.apertura.toFixed(0)
+    // let bulletPosition = (data.apertura/rsRangeLine.max);
+    // rsBullet.style.left = (bulletPosition * 578) + "px";
 
     function showSliderValue() {
-        if(Number(rsRangeLine.value)>0 && !input.checked){
+        if(Number(rsRangeLine.value)>0){
             socket.emit("valve", {
                 valvula:data.name,
                 apertura:Number(rsRangeLine.value)
             });
         }
     }
+}
 
-
-    // Agregar elementos al DOM
-    rangeSlider.appendChild(rsBullet);
-    rangeSlider.appendChild(rsRangeLine);
-
-    boxMinMax.appendChild(span0);
-    boxMinMax.appendChild(spanApertura);
-    boxMinMax.appendChild(span100);
-
-    containerSlider.appendChild(rangeSlider);
-    containerSlider.appendChild(boxMinMax);
-
-    // Agregar el contenedor al cuerpo del documento (puedes cambiar esto dependiendo de donde quieras agregarlo)
-    container.appendChild(containerSlider);
+function updatevaluevale(label,input,value){
+    label.textContent=value.toFixed(2)+'%';
+    input.value=value;
 }
 
 socket.on("valve", (data) => {
     let data_serializada=JSON.parse(data);
-    ventanas[4][data_serializada.name]['bullet'].innerHTML=data_serializada.apertura.toFixed(0)+'%';
-    let rsRangeLine = ventanas[4][data_serializada.name]['slider'];
-    let bulletPosition = (data_serializada.apertura /rsRangeLine.max);
-    ventanas[4][data_serializada.name]['bullet'].style.left = (bulletPosition * 578) + "px";
+    updatevaluevale(
+        ventanas[4][data_serializada.name]['label'],
+        ventanas[4][data_serializada.name]['slider'],
+        data_serializada.apertura
+    )
+    ventanas[4][data_serializada.name].value=data_serializada.apertura;
 });
 
 
@@ -871,10 +832,378 @@ function crear_PID_ventana(contenedorDiv){
         contenedorDiv.appendChild(PID_layout_diagram_element);
 
         pid=new PIDDiagram('pid-ventana',true);
-        pid.loadData('./assets/planta.json','./libs/PIDjs/symbols');
+        pid.loadData('./assets/planta.json','./libs/PIDjs/symbols').then(()=>{
+            pid.containerElement.addEventListener('mouseenter',(event)=>{
+                plat_app.controls.enabled=false;
+            });
+
+
+            Object.keys(pid.equiments).forEach(equipo=>{
+                pid.equiments[equipo].on('mouseover',(event)=>{
+                    pid_selec(equipo);
+                    plat_app.select(plat_app.Scene_objects[equipo].obj);
+                });
+
+                pid.equiments[equipo].on('mouseout',(event)=>{
+                    pid_selec(equipo,false);
+                });
+
+                pid.equiments[equipo].on('tap',(event)=>{
+                    plat_app.click();
+                });
+            });
+
+            Object.keys(pid.controlelement).forEach(controlkey=>{
+                pid.controlelement[controlkey].on('tap',(event)=>{
+                    socket.emit("get_PID_control", {
+                        id:controlkey.split('_')[2],
+                        nodeid:controlkey
+                    });
+                });
+            });
+        });
         
     }else{
         contenedorDiv.appendChild(pid.containerElement);
     }
+
+}
+
+function pid_selec(equipo,on=true){
+    if(pid.equiments[equipo]){
+        pid.equiments[equipo].style('background-color', on? '#008a84' : 'white');
+        pid.equiments[equipo].style('background-opacity', on? 0.3 : 0);
+    }
+}
+
+function crearNodeVentanaEdicion(config) {
+    // Crear el contenedor principal
+    let nodeWindows = document.createElement('div');
+    nodeWindows.className = 'node-windows';
+
+    // Crear la cabecera de la ventana
+    let nodeWindowsHead = document.createElement('div');
+    nodeWindowsHead.className = 'node-windows-head';
+
+    nodeWindowsHead.addEventListener('mousedown',()=>{
+        nodeWindowsHead.style.cursor='move';
+    });
+
+    nodeWindowsHead.addEventListener('mouseup',()=>{
+        nodeWindowsHead.style.cursor='auto';
+    });
+
+    let headCircle1 = document.createElement('div');
+    headCircle1.className = 'node-windows-head-cicle';
+
+    let headTitle = document.createElement('h4');
+    headTitle.textContent = config.title;
+
+    let headCircleClose = document.createElement('div');
+    headCircleClose.className = 'node-windows-head-cicle';
+
+    headCircleClose.classList.add('close');
+
+    // Agregar los elementos a la cabecera
+    nodeWindowsHead.appendChild(headCircle1);
+    nodeWindowsHead.appendChild(headTitle);
+    nodeWindowsHead.appendChild(headCircleClose);
+    nodeWindows.appendChild(nodeWindowsHead);
+
+    let funs={
+        start: function(event, ui) {
+        },
+        drag: function(event, ui) {
+        },
+        stop: function(event, ui) {
+        },
+        closed: (targe)=>{
+        }
+    }
+
+    headCircleClose.addEventListener('click',()=>{
+        nodeWindows.remove();
+        funs.closed(nodeWindows);
+    });
+
+    $(nodeWindows).draggable({
+        handle: nodeWindowsHead,
+        start: (event, ui)=>{funs.start(event, ui)},
+        drag: (event, ui)=>{funs.drag(event, ui)},
+        stop: (event, ui)=>{funs.stop(event, ui)}
+    });
+
+    nodeWindows.style.position='absolute';
+
+    // Crear las subconfiguraciones
+    config.subconfigs.forEach(subconfig => {
+        let subconfigTitle = document.createElement('h4');
+
+        subconfigTitle.style.margin = '5px';
+        subconfigTitle.style.fontSize = '10.5px';
+        subconfigTitle.textContent = 'Editor de configuraciones';
+
+        subconfigTitle.textContent = subconfig.title;
+
+        nodeWindows.appendChild(subconfigTitle);
+
+        // Crear los inputs para cada subconfiguración
+        subconfig.inputs.forEach(inputConfig => {
+            let inputDiv = document.createElement('div');
+            inputDiv.className = 'node-windows-input';
+
+            let inputLabel = document.createElement('h4');
+            inputLabel.textContent = inputConfig.name;
+
+            let inputElement = document.createElement('input');
+            inputElement.type = inputConfig.type;
+            if(inputConfig.type!=='checkbox'){
+                inputElement.value = inputConfig.value;
+            }else{
+                inputElement.checked=inputConfig.value;
+            }
+
+            inputElement.addEventListener('change', (event) => {
+                inputConfig.fun(event);
+            });
+
+            inputElement.addEventListener('wheel', function(event) {
+                event.preventDefault();
+                if(document.activeElement !== inputElement){
+                    return;
+                }
+                inputElement.value=(parseFloat(inputElement.value)-event.deltaY/100).toFixed(5);
+                inputConfig.fun(event);
+            });
+
+            inputConfig.element=inputElement;
+
+            // Agregar los elementos a la sección de entrada de la constante
+            if (inputConfig.type === 'number') {
+                let inputArrowLeft = document.createElement('div');
+                inputArrowLeft.className = 'node-windows-input-arrow left';
+
+                inputArrowLeft.addEventListener('click',(event)=>{
+                    inputElement.value=(parseFloat(inputElement.value)-0.1).toFixed(5);
+                    inputConfig.fun(event);
+                });
+
+                inputDiv.appendChild(inputArrowLeft);
+            }
+            inputDiv.appendChild(inputLabel);
+
+            inputDiv.appendChild(inputElement);
+
+            if(inputConfig.type==='checkbox'){
+                let checkdiv=document.createElement('div');
+                checkdiv.className='checkbox-input-node';
+
+                checkdiv.addEventListener('click',(event)=>{
+                    inputElement.checked=!inputElement.checked;
+                    let event2={...event};
+                    event2.target=inputElement;
+                    inputConfig.fun(event2);
+                });
+
+                let checkboxCircle=document.createElement('div');
+                checkboxCircle.className='checkbox-input-node-cicle';
+                checkdiv.appendChild(checkboxCircle);
+                inputDiv.appendChild(checkdiv);
+            }
+
+            if (inputConfig.type === 'number') {
+
+                let inputArrowRight = document.createElement('div');
+                inputArrowRight.className = 'node-windows-input-arrow right';
+
+                inputArrowRight.addEventListener('click',(event)=>{
+                    inputElement.value=(parseFloat(inputElement.value)+0.1).toFixed(5);
+                    inputConfig.fun(event);
+                });
+
+                inputDiv.appendChild(inputArrowRight);
+            }
+
+            nodeWindows.appendChild(inputDiv);
+        });
+    });
+
+    return {element:nodeWindows,data:config, funs:funs};
+}
+
+socket.on("get_PID_control", (data) => {
+    let dataPID=JSON.parse(data);
+
+    create_type_node('PID');
+
+    if (nodeVentanas['PID'][dataPID.input.id]===undefined){
+        nodeVentanas['PID'][dataPID.input.id]=crearNodeVentanaEdicion({
+            title: 'Control PID '+dataPID.input.id,
+            subconfigs: [
+                {
+                    title:'Estado de control',
+                    inputs:[
+                        {
+                            name: dataPID.data.activo? 'Lazo cerrado': 'Lazo abierto', 
+                            type: 'checkbox', value: dataPID.data.activo, 
+                            fun: (event)=>{
+                                event.target.parentElement.childNodes[0].textContent = event.target.checked? 'Lazo cerrado': 'Lazo abierto';
+                                nodeVentanas['PID'][dataPID.input.id].PIDcontroler.activo=event.target.checked;
+                                if(ventanas[4] && ventanas[4]['VC'+dataPID.input.id]){
+                                    ventanas[4]['VC'+dataPID.input.id]['activo']=dataPID.data.activo;
+                                }
+                                socket.emit("lazo", nodeVentanas['PID'][dataPID.input.id].PIDcontroler);
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: 'Constantes',
+                    inputs: [
+                        {
+                            name: 'Proporcional', type: 'number', value: dataPID.data.Kp,
+                            fun: (event)=>{
+                                nodeVentanas['PID'][dataPID.input.id].PIDcontroler.Kp=parseFloat(event.target.value);
+                                socket.emit("lazo", nodeVentanas['PID'][dataPID.input.id].PIDcontroler);
+                            }
+                        },
+                        { 
+                            name: 'Integral', type: 'number', value: dataPID.data.Ki,
+                            fun: (event)=>{
+                                nodeVentanas['PID'][dataPID.input.id].PIDcontroler.Ki=parseFloat(event.target.value);
+                                socket.emit("lazo", nodeVentanas['PID'][dataPID.input.id].PIDcontroler);
+                            }
+                        },
+                        { 
+                            name: 'Derivativo', type: 'number', value: dataPID.data.Kd,
+                            fun: (event)=>{
+                                nodeVentanas['PID'][dataPID.input.id].PIDcontroler.Kd=parseFloat(event.target.value);
+                                socket.emit("lazo", nodeVentanas['PID'][dataPID.input.id].PIDcontroler);
+                            }
+                        }
+                    ]
+                }
+            ]
+        });
+
+        let node_control_pos=pid.cy.$('#'+dataPID.input.nodeid+'-diagram').position();
+
+        let node=pid.cy.add({
+            group: 'nodes',
+            data: { id: 'n3-windows-control-'+dataPID.input.id},
+        });
+
+        nodeVentanas['PID'][dataPID.input.id].element.style.transformOrigin = "0 0";
+
+        node.style({
+            'width':1,
+            'height':1,
+            'shape': 'rectangle',
+            'background-opacity':0
+        });
+
+        node.position(
+            {
+                x:node_control_pos.x+pid.cy.$('#'+dataPID.input.nodeid+'-diagram').with()/2,
+                y:node_control_pos.y+pid.cy.$('#'+dataPID.input.nodeid+'-diagram').height()/2
+            }
+        );
+
+        let line_nodes=pid.cy.add([
+            {
+                group: 'edges',
+                data: {
+                    id: 'edge-line-control-'+dataPID.input.id,
+                    source: dataPID.input.nodeid+'-diagram',
+                    target: 'n3-windows-control-'+dataPID.input.id
+                }
+            }
+        ]);
+
+        line_nodes.style({
+            'width': 0.5,
+            'line-color': pid.isblackstyle? 'white' :'black',
+            'target-arrow-color': pid.isblackstyle? 'white' :'black',
+            'target-arrow-shape': 'none',
+            'line-color': pid.isblackstyle? 'white' :'black',
+            "curve-style": "round-taxi",
+            "taxi-radius": 50
+        });
+
+        node_windows_updatepost(node, nodeVentanas['PID'][dataPID.input.id].element);
+
+        nodeVentanas['PID'][dataPID.input.id].funs.drag=function(event, ui){
+            node_update_ventana(node, nodeVentanas['PID'][dataPID.input.id].element);
+        }
+
+        nodeVentanas['PID'][dataPID.input.id].funs.closed=(ventana)=>{
+            line_nodes.remove();
+            node.remove();
+        }
+
+        pid.cy.on('pan', function() {
+            node_windows_updatepost(node, nodeVentanas['PID'][dataPID.input.id].element);
+        });
+    
+
+        pid.cy.on('zoom', function() {
+            node_windows_updatepost(node, nodeVentanas['PID'][dataPID.input.id].element);
+        })
+
+        nodeVentanas['PID'][dataPID.input.id].node=node;
+        nodeVentanas['PID'][dataPID.input.id].line_nodes=line_nodes;
+
+    }
+
+    if (!pid.containerElement.contains(nodeVentanas['PID'][dataPID.input.id].element)) {
+        pid.containerElement.appendChild(nodeVentanas['PID'][dataPID.input.id].element);
+        pid.cy.add(nodeVentanas['PID'][dataPID.input.id].node);
+        pid.cy.add(nodeVentanas['PID'][dataPID.input.id].line_nodes);
+    }
+
+    nodeVentanas['PID'][dataPID.input.id].data.subconfigs[1].inputs[0].element.value=dataPID.data.Kp;
+    nodeVentanas['PID'][dataPID.input.id].data.subconfigs[1].inputs[1].element.value=dataPID.data.Ki;
+    nodeVentanas['PID'][dataPID.input.id].data.subconfigs[1].inputs[2].element.value=dataPID.data.Kd;
+    nodeVentanas['PID'][dataPID.input.id].data.subconfigs[0].inputs[0].element.checked=dataPID.data.activo;
+    if(ventanas[4] && ventanas[4]['VC'+dataPID.input.id]){
+        ventanas[4]['VC'+dataPID.input.id]['activo']=dataPID.data.activo;
+    }
+
+    let rectsize=nodeVentanas['PID'][dataPID.input.id].element.getBoundingClientRect();
+
+    nodeVentanas['PID'][dataPID.input.id].node.style({
+        'width':rectsize.width/pid.cy.zoom(),
+        'height':rectsize.height/pid.cy.zoom(),
+    });
+
+    node_update_ventana(nodeVentanas['PID'][dataPID.input.id].node, nodeVentanas['PID'][dataPID.input.id].element);
+
+    nodeVentanas['PID'][dataPID.input.id].PIDcontroler=dataPID.data;
+    nodeVentanas['PID'][dataPID.input.id].PIDcontroler.loop='VC'+dataPID.input.id;
+});
+
+function node_update_ventana(node, nodeWindowelement){
+    let rect=nodeWindowelement.getBoundingClientRect();
+
+    node.renderedPosition({
+        x:Number(nodeWindowelement.style.left.split('px')[0])+rect.width/2,
+        y:Number(nodeWindowelement.style.top.split('px')[0])+rect.height/2
+    });
+}
+
+function create_type_node(type){
+    if (nodeVentanas[type]===undefined){
+        nodeVentanas[type]={}
+    }
+}
+
+function node_windows_updatepost(node, nodeWindowelement){
+
+    let position = node.renderedPosition();
+
+    nodeWindowelement.style.transform= `scale(${pid.cy.zoom()*0.5})`;
+
+    nodeWindowelement.style.top=position.y-node.height()*pid.cy.zoom()/2+'px';
+    nodeWindowelement.style.left=position.x-node.width()*pid.cy.zoom()/2+'px';
 
 }

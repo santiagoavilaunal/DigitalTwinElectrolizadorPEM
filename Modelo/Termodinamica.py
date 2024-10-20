@@ -193,7 +193,7 @@ class Sistema:
             self.fase = CoolProp.iphase_not_imposed
 
 
-def BinarieVLE(T, P, Es, max_iter=100, tol=1E-9):
+def BinarieVLE(T, P, Es, max_iter=100, tol=1E-6):
     # Función para calcular el equilibrio de fases binario (VLE)
 
     # Obtener propiedades críticas y acentricidades para las especies
@@ -246,7 +246,7 @@ def BinarieVLE(T, P, Es, max_iter=100, tol=1E-9):
     del EOS_TGas,EOS_TLiq
     return {'c': [x, y], 'converg': False,'error':error}
 
-def Solubilidad_Gas(T, P, z1, max_iter=100, tol=1E-9):
+def Solubilidad_Gas(T, P, z1, max_iter=100, tol=1E-6):
     # Función para calcular la solubilidad de un gas en una mezcla
 
     a = np.array(['H2O', 'H2', 'O2'])  # Especies en la mezcla
@@ -417,7 +417,7 @@ def Solubilidad_Gas(T, P, z1, max_iter=100, tol=1E-9):
 
 
 
-def PuntoBurbuja(T,x,Es,tol=1e-9):
+def PuntoBurbuja(T,x,Es,tol=1E-6):
     w = np.array([cp.PropsSI('acentric', es) for es in Es])
     Tc = np.array([cp.PropsSI('TCRIT', es) for es in Es])
     Pc = np.array([cp.PropsSI('PCRIT', es) for es in Es])
@@ -458,7 +458,7 @@ def PuntoBurbuja(T,x,Es,tol=1e-9):
     finally:
         del EOS_Liq,EOS_Gas
 
-def PuntoRocio(T,y,Es,tol=1e-9):
+def PuntoRocio(T,y,Es,tol=1E-6):
     # w = np.array([cp.PropsSI('acentric', es) for es in Es])
     # Tc = np.array([cp.PropsSI('TCRIT', es) for es in Es])
     # Pc = np.array([cp.PropsSI('PCRIT', es) for es in Es])
@@ -501,7 +501,7 @@ def PuntoRocio(T,y,Es,tol=1e-9):
     del EOS_Gas,EOS_Liq
     return P[0]
 
-def PuntoBurbuja2(T,x,Es,tol=1e-9):
+def PuntoBurbuja2(T,x,Es,tol=1E-6):
     w = np.array([cp.PropsSI('acentric', es) for es in Es])
     Tc = np.array([cp.PropsSI('TCRIT', es) for es in Es])
     Pc = np.array([cp.PropsSI('PCRIT', es) for es in Es])
@@ -545,7 +545,7 @@ def PuntoBurbuja2(T,x,Es,tol=1e-9):
     del EOS_Gas,EOS_Liq
     return P[0]
 
-def PuntoRocio2(T,y,Es,tol=1e-9):
+def PuntoRocio2(T,y,Es,tol=1E-6):
     w = np.array([cp.PropsSI('acentric', es) for es in Es])
     Tc = np.array([cp.PropsSI('TCRIT', es) for es in Es])
     Pc = np.array([cp.PropsSI('PCRIT', es) for es in Es])

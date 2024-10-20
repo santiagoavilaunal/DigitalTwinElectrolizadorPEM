@@ -30,13 +30,20 @@
         <h3 id="info_mensaje"></h3>
         <div class="Terminal_conten" id="Terminal_conten" style="display: none;"></div>
     </div>
+    <div class="info_conten debug info_des" id="config" onclick="crear_ventana('Diagrama y Control',6);" style="z-index: 10000;top:120px;min-height: auto;padding-bottom: 3px; cursor: pointer;">
+        <h4 id="info_type" style="font-size: 12px;">Diagrama y Control</h4>
+    </div>
+
     <img src="./assets/logo.png" alt="" style="width: 280px; position: absolute; top: 0px; left: 0px;user-select: none;">
+    
+    
     <script>
         var plat_app=null;
         var terminal=null;
         var pid=null;
         var plantadata={};
         var ventanas={};
+        var nodeVentanas={};
         const div_3D_plant =  document.getElementById('planta3D');
         const socket = io({
             autoConnect: false

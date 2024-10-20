@@ -295,6 +295,16 @@ body{
     opacity: 1;
 }
 
+.info_des:hover .info-conten-hover{
+    display: block;
+}
+
+.info-conten-hover{
+    display: none;
+    height: 200px;
+    background: black;
+}
+
 .info { background: #105075; color: white; }
 .error { background: #751010; color: white; }
 .warning { background: #757510; color: white; }
@@ -413,4 +423,199 @@ body{
 .dygraph-legend{
     background: transparent;
     font-size: 10px;
+}
+
+.node-windows{
+    --color-text:#858585;
+    position: absolute;
+    width: 200px;
+    background: #363636;
+    border-radius: 5px;
+    top: 0px;
+    left: 0px;
+    overflow: hidden;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+    padding-bottom: 5px;
+    color: var(--color-text);
+}
+
+.node-windows-head{
+    width: 100%;
+    height: 30px;
+    background: #2b2b2b;
+    border-bottom: solid #222222 0.5px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--color-text);
+}
+
+.node-windows-head-cicle{
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-text);
+    margin: 5px;
+}
+
+.node-windows-head-cicle.close{
+    background: rgb(150, 0, 0);
+    transition: 0.1s;
+    cursor: pointer;
+}
+
+.node-windows-head-cicle.close:hover{
+    background: #105075;
+}
+
+.node-windows h4 {
+    flex-grow: 1; /* Hace que el h4 ocupe el espacio restante */
+    text-align: left;
+    margin: 0; /* Remueve el margen por defecto para evitar desplazamiento no deseado */
+    font-size: 11px;
+    color:var(--color-text);
+}
+
+.node-windows-input{
+    --input-color-node-editor: #cecece;
+    margin: 5px;
+    width: calc(100% - 10px);
+    height: 15px;
+    background: #222222;
+    border-radius: calc(15px / 2);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    overflow: hidden;
+}
+
+.node-windows-input:focus-within {
+    border: solid var(--color-text) 0.5px;
+}
+
+
+.node-windows-input-arrow{
+    --color-arrow:var(--input-color-node-editor);
+    --width-arrow:5px;
+    --height-arrow:5px;
+}
+
+.node-windows-input-arrow:hover{
+    --color-arrow:#86c1c5;
+}
+
+.node-windows-input-arrow.left {
+    width: 0;
+    height: 0;
+    border-bottom: var(--width-arrow) solid transparent;
+    border-top: var(--width-arrow) solid transparent;
+    border-right: var(--height-arrow) solid var(--color-arrow);
+    margin: 2px;
+}
+
+.node-windows-input-arrow.right {
+    width: 0;
+    height: 0;
+    border-bottom: var(--width-arrow) solid transparent;
+    border-top: var(--width-arrow) solid transparent;
+    border-left: var(--height-arrow) solid var(--color-arrow);
+    margin: 2px;
+}
+
+.node-windows-input h4{
+    font-size: 8px;
+    color: var(--input-color-node-editor);
+    margin-left: 5px;
+}
+
+.node-windows-input input {
+    flex-grow: 1; /* El input crecerá para llenar el contenedor */
+    height: 100%; /* Asegúrate de que el contenedor tenga altura definida */
+    font-size: 8px;
+    background: transparent;
+    border: none;
+    text-align: right;
+    outline: none; /* Quita el contorno al hacer foco */
+    box-sizing: border-box; /* Incluye padding y border en el ancho y alto */
+    margin: 0; /* Asegúrate de que no haya márgenes que afecten el tamaño */
+    color: var(--input-color-node-editor);
+    margin-right: 5px;
+}
+
+/* Para ocultar las flechas en navegadores basados en WebKit (Chrome, Safari) */
+.node-windows-input input[type="number"]::-webkit-inner-spin-button,
+.node-windows-input input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none; /* Para ocultar las flechas */
+    margin: 0; /* Quita el margen */
+}
+
+.node-windows-input input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox-input-node{
+    width: 30px;
+    height: 100%;
+    background: #610000;
+    border-radius: 115px;
+    overflow: hidden;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.5s;
+}
+
+.node-windows-input input[type="checkbox"]:checked + .checkbox-input-node{
+    background: #136100;
+}
+
+.checkbox-input-node-cicle{
+    position: relative;
+    left: 0%;
+    top: calc(50% - 5px);
+    background-color: white;
+    border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    transition: 0.5s;
+    margin-left: 1px;
+    margin-right: 1px;
+}
+
+.node-windows-input input[type="checkbox"]:checked + .checkbox-input-node .checkbox-input-node-cicle{
+    left: calc(100% - 12px);
+}
+
+.node-conten-windows{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.valve-range-div{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.valve-range-input{
+    width: 90%;
+}
+.valve-range-div-label-conten{
+    width: 90%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.valve-range-div-label-conten h4{
+    font-size: 11px;
+    margin: 0px;
 }

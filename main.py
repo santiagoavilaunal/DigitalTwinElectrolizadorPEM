@@ -13,6 +13,7 @@ from uvicorn.loops.asyncio import asyncio_setup
 import logging
 import time
 import threading
+import traceback
 
 
 # Set some basic logging
@@ -118,15 +119,21 @@ async def test(sid, data):
 @sio.on("lazo")
 async def lazo(sid, data):
     global planta
-    if planta.loops.get(data['loop'],None) is not None:
-        planta.loops[data['loop']]=data['value']
+    if planta.PIDControllers.get(data['loop'],None) is not None:
+        planta.PIDControllers[data['loop']].Kp=data['Kp']
+        planta.PIDControllers[data['loop']].Ki=data['Ki']
+        planta.PIDControllers[data['loop']].Kd=data['Kd']
+        planta.PIDControllers[data['loop']].activo=data['activo']
 
 @sio.on("valve")
 async def valve(sid, data):
     global planta, calculando, logger
     Q=planta.valvulas[data['valvula']].Q(data['apertura'])
 
-    await sio.emit('valve',data=json.dumps(planta.valvulas[data['valvula']].printData(), cls=NumpyEncoder), room=sid)
+    resulto_send=planta.valvulas[data['valvula']].printData()
+    resulto_send['control']=planta.PIDControllers[data['valvula']].printData()
+
+    await sio.emit('valve',data=json.dumps(resulto_send, cls=NumpyEncoder), room=sid)
 
 @sio.on('dinamico_activar')
 async def dinamico_activar(sid, data):
@@ -212,8 +219,20 @@ async def estacionario_calcular(sid, data):
         logger.info('No hay cambios en los valores')
         await sio.emit("estacionario_resultado", json.dumps(planta.printData(), cls=NumpyEncoder), room=sid)
 
-
-
+@sio.on("get_PID_control")
+async def estacionario_calcular(sid, data):
+    if planta is not None:
+        if planta.PIDControllers.get('VC'+data['id'],None) is not None:
+            await sio.emit("get_PID_control",
+                json.dumps(
+                    {
+                        "data":planta.PIDControllers['VC'+data['id']].printData(),
+                        "input":data
+                    },
+                    cls=NumpyEncoder
+                ),
+                room=sid
+            )
 
 async def background_task():
     while True:
@@ -240,6 +259,7 @@ def Planta_dinamics(sid):
         except Exception as error:
             logger.warning(f"Error: {error}")
             planta.dinamico_activo=False
+            traceback.print_exc()
         finally:
             calculando = False
             if 1-res_time>=0:

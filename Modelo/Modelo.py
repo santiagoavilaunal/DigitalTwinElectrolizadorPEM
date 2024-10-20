@@ -64,17 +64,11 @@ class Planta:
         }
 
         self.PIDControllers={
-            'VC101':PIDController(-0.5/0.2,-0.5,0, 0, offset=0, min_Mv=0.01, max_Mv=95),
-            'VC103':PIDController(-500/0.2,-120,0, 0.3, offset=0.3, min_Mv=0.01, max_Mv=97),
-            'VC105':PIDController(-1/14,-0.005,0, 0, offset=0, min_Mv=0.0, max_Mv=200),
-            'VC106':PIDController(-20/14,-0.1,0, 0, offset=0, min_Mv=0.0, max_Mv=200)
-        }
-
-        self.loops={
-            '101':False,
-            '103':False,
-            '105':False,
-            '106':False
+            'VC101':PIDController(-0.5/0.2,-0.5,0, 0, offset=0, min_Mv=0.01, max_Mv=95, activo=False),
+            'VC102':PIDController(-500/0.2,-120,0, 0.3, offset=0.3, min_Mv=0.01, max_Mv=97, activo=False),
+            'VC103':PIDController(-500/0.2,-120,0, 0.3, offset=0.3, min_Mv=0.01, max_Mv=97, activo=False),
+            'VC105':PIDController(-1/14,-0.005,0, 0, offset=0, min_Mv=0.0, max_Mv=200, activo=False),
+            'VC106':PIDController(-20/14,-0.1,0, 0, offset=0, min_Mv=0.0, max_Mv=200, activo=False)
         }
         
         self.T13=T13
@@ -260,17 +254,20 @@ class Planta:
         self.flujos['F13'].z = self.flujos['F10'].z
         self.flujos['F13'].update()
 
-        if self.loops['101']:
+        if self.PIDControllers['VC101'].activo:
             self.valvulas['VC101'].Q(self.PIDControllers['VC101'].calculate(self.flujos['F13'].T,dt))
         
-        if self.loops['103']:
+        if self.PIDControllers['VC103'].activo:
             self.valvulas['VC103'].Q(self.PIDControllers['VC103'].calculate(self.equipos['V102'].Liqlevel,dt))
+
+        if self.PIDControllers['VC102'].activo:
+            self.valvulas['VC102'].Q(self.PIDControllers['VC102'].calculate(self.equipos['V101'].Liqlevel,dt))
             
-        if self.loops['105']:
+        if self.PIDControllers['VC105'].activo:
             self.flujos['F2'].F=self.PIDControllers['VC105'].calculate(self.equipos['V102'].P*1e-5,dt)
             self.flujos['F2'].update()
         
-        if self.loops['106']:
+        if self.PIDControllers['VC106'].activo:
             self.flujos['F3'].F=self.PIDControllers['VC106'].calculate(self.equipos['V101'].P*1e-5,dt)
             self.flujos['F3'].update()
 
@@ -290,15 +287,15 @@ class Planta:
                     traza['x']=[]
                     traza['y']=[]
         
-        for loop in self.loops.keys():
-            self.loops[loop]=False
+        for loop in self.PIDControllers.keys():
+            self.PIDControllers[loop].activo=False
 
 
     def printData(self):
         return {
             'Equipos':{key: self.equipos[key].printData() for key in self.equipos},
             'Flujos':{key: self.flujos[key].printData() for key in self.flujos},
-            'Valvulas':{key: self.valvulas[key].printData() for key in self.valvulas},
+            'Valvulas': {key: {**self.valvulas[key].printData(), 'control': self.PIDControllers[key].printData() if key in self.PIDControllers else None} for key in self.valvulas},
             'T13':self.T13,
             'Q':self.Q,
             'Pca':self.Pca,
