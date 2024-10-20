@@ -615,6 +615,7 @@ class FlashTanque:
             for key in self.dinamico:
                 for traza in self.dinamico[key]['trazas']:
                     traza['x'].append(dt/60+traza['x'][-1])
+        
         dt_dt=self.dif_dt()
         self.T=dt_dt[1]*dt+self.T
         self.P=dt_dt[2]*dt+self.P
@@ -628,6 +629,9 @@ class FlashTanque:
         self.dinamico['F']['n_liq']=np.round(dt_dt[3],5)*dt+self.dinamico['F']['n_liq']
         self.dinamico['L']['trazas'][0]['y'].append(np.round(self.dinamico['F']['n_liq']*4/(self.flujos[1][0].D*np.pi*(self.d**2)),4))
         self.Liqlevel=self.dinamico['L']['trazas'][0]['y'][-1]
+
+        for flujo in self.flujos[0]:
+            flujo.P=self.P
 
         self.flujos[1][0].P=self.P
         self.flujos[1][0].T=self.T

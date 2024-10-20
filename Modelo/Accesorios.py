@@ -74,7 +74,7 @@ class Valvula:
 
 
 class PIDController:
-    def __init__(self, Kp, Ki, Kd, setpoint, offset=0, min_Mv=float('-inf'), max_Mv=float('inf')):
+    def __init__(self, Kp:float, Ki:float, Kd:float, setpoint:float, offset:float=0, min_Mv=float('-inf'), max_Mv=float('inf'), activo=False):
         self.Kp = Kp
         self.Ki = Ki
         self.Kd = Kd
@@ -84,6 +84,7 @@ class PIDController:
         self.max_Mv = max_Mv
         self.integral = 0
         self.prev_error = 0
+        self.activo=activo
 
     def calculate(self, measurement, dt):
         # Error calculation
@@ -106,3 +107,26 @@ class PIDController:
         self.prev_error = error
 
         return MV
+    
+    def printData(self):
+        return {
+            "Kp":self.Kp,
+            "Ki":self.Ki,
+            "Kd":self.Kd,
+            "setpoint":self.setpoint,
+            "offset":self.offset,
+            "min_Mv":self.min_Mv,
+            "max_Mv":self.max_Mv,
+            "integral":self.integral,
+            "prev_error":self.prev_error,
+            "activo":self.activo
+        }
+    
+    def to_json(self):
+        return json.dumps(self.printData())
+
+    def __str__(self):
+        return str(self.printData())
+
+    def __repr__(self):
+        return str(self.printData())

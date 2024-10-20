@@ -9,6 +9,8 @@ class PIDDiagram {
         this.planta ={}
         this.isblackstyle = isblackstyle;
         this.cy = null;
+        this.equiments={};
+        this.controlelement={};
 
         this.cyElement.classList.add('cy-layer-diagram');
         this.cyElement.id='id-cy-layer-diagram';
@@ -17,8 +19,8 @@ class PIDDiagram {
         this.layerEquirmenElement.id='equipment-layer';
 
         this.containerElement.appendChild(this.layaodelement);
-        this.containerElement.appendChild(this.cyElement);
         this.containerElement.appendChild(this.layerEquirmenElement);
+        this.containerElement.appendChild(this.cyElement);
 
         if(this.isblackstyle){this.layaodelement.classList.add('blackstyle')}
 
@@ -439,6 +441,9 @@ class PIDDiagram {
         diagram.equiments.forEach(equiment => {
             if(equiment.type != 'linepoint' && equiment.type != 'nodecontrol'){
                 this.createDivEquiments(equiments[equiment.id]);
+                this.equiments[equiment.id]=this.cy.$('#'+equiment.id+'-diagram');
+            }else if(equiment.type == 'nodecontrol'){
+                this.controlelement[equiment.id]=this.cy.$('#'+equiment.id+'-diagram');
             }
         });
     
@@ -470,7 +475,7 @@ class PIDDiagram {
         let pidclass=this;
     
         this.cy.$('#'+equiment.id+'-diagram').on('position', function(event) {
-            pidclass.updatepost(equiment).bind(pidclass);
+            pidclass.updatepost(equiment);
         });
     
         // Escuchar los eventos de pan (cuando el gráfico se mueve)
