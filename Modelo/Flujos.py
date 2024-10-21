@@ -182,12 +182,12 @@ class Flujo:
         
         
     
-    def update(self):
+    def update(self,z0: list | None=None):
         """
         Método para actualizar las propiedades termodinámicas del flujo.
         """
         # Calcular la solubilidad del gas en el sistema
-        resultado_solubilidad = Tm.Solubilidad_Gas(self.T, self.P, self.z, tol=self.tol)
+        resultado_solubilidad = Tm.Solubilidad_Gas(self.T, self.P, self.z,z0=z0,tol=self.tol)
         
         # Verificar si el cálculo de solubilidad converge
         if not resultado_solubilidad['converg']:

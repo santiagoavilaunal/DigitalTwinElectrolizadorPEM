@@ -124,6 +124,9 @@ async def lazo(sid, data):
         planta.PIDControllers[data['loop']].Ki=data['Ki']
         planta.PIDControllers[data['loop']].Kd=data['Kd']
         planta.PIDControllers[data['loop']].activo=data['activo']
+        planta.PIDControllers[data['loop']].integral=0
+        planta.PIDControllers[data['loop']].prev_error=0
+        planta.PIDControllers[data['loop']].offset=planta.PIDControllers[data['loop']].Mv
 
 @sio.on("valve")
 async def valve(sid, data):
@@ -281,6 +284,7 @@ def Planta_tasks(sid):
         logger.warning(f"Error: {error}")
         planta = None
         send_msg("estacionario_resultado", json.dumps({'error': str(error)}), room=sid)
+        traceback.print_exc()
     finally:
         calculando = False
 

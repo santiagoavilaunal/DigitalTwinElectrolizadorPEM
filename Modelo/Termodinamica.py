@@ -193,16 +193,20 @@ class Sistema:
             self.fase = CoolProp.iphase_not_imposed
 
 
-def BinarieVLE(T, P, Es, max_iter=100, tol=1E-6):
+def BinarieVLE(T, P, Es, max_iter=100, z0: list | None=None ,tol=1E-9):
     # Función para calcular el equilibrio de fases binario (VLE)
 
-    # Obtener propiedades críticas y acentricidades para las especies
-    w = np.array([cp.PropsSI('acentric', es) for es in Es])
-    Tc = np.array([cp.PropsSI('TCRIT', es) for es in Es])
-    Pc = np.array([cp.PropsSI('PCRIT', es) for es in Es])
+    if z0 is None:
+        # Obtener propiedades críticas y acentricidades para las especies
+        w = np.array([cp.PropsSI('acentric', es) for es in Es])
+        Tc = np.array([cp.PropsSI('TCRIT', es) for es in Es])
+        Pc = np.array([cp.PropsSI('PCRIT', es) for es in Es])
 
-    # Calcular coeficientes de ajuste k
-    k = (Pc / P) * np.exp(5.37 * (1 + w) * (1 - Tc / T))
+        # Calcular coeficientes de ajuste k
+        k = (Pc / P) * np.exp(5.37 * (1 + w) * (1 - Tc / T))
+    
+    else:
+        k = z0[1]/z0[0]
 
     # Configurar las fracciones molares y especificar fase líquida
     EOS_TLiq=Sistema(components=Es, phase='Liq')
@@ -246,7 +250,7 @@ def BinarieVLE(T, P, Es, max_iter=100, tol=1E-6):
     del EOS_TGas,EOS_TLiq
     return {'c': [x, y], 'converg': False,'error':error}
 
-def Solubilidad_Gas(T, P, z1, max_iter=100, tol=1E-6):
+def Solubilidad_Gas(T, P, z1, max_iter=100,z0: list | None=None,tol=1E-9):
     # Función para calcular la solubilidad de un gas en una mezcla
 
     a = np.array(['H2O', 'H2', 'O2'])  # Especies en la mezcla
@@ -290,7 +294,7 @@ def Solubilidad_Gas(T, P, z1, max_iter=100, tol=1E-6):
         y = np.array([0.0, 0.0, 0.0])
 
         # Resolver el equilibrio de fases binario (VLE) usando BinarieVLE
-        s = BinarieVLE(T, P, a[z > 0], max_iter=max_iter, tol=tol)
+        s = BinarieVLE(T, P, a[z > 0], max_iter=max_iter, z0=[z0[0][z>0],z0[1][z>0]] if z0 is not None else None, tol=tol)
         x[z > 0] = s['c'][0]
         y[z > 0] = s['c'][1]
 
@@ -326,7 +330,7 @@ def Solubilidad_Gas(T, P, z1, max_iter=100, tol=1E-6):
     # Resolver para mezclas con más de dos especies
     
     if z[0]<0.99:
-        pr=PuntoRocio2(T,z,a,tol=tol)
+        pr=PuntoRocio2(T,z,a,P0=P if z0 is not None and len(z0)>2 else None,tol=tol)
         #print(np.round(pr*1e-5,3),np.round(P*1e-5,3))
         if np.round(pr*1e-5,3)>=np.round(P*1e-5,3):
             EOS_sisV=Sistema(a,phase='Gas')
@@ -335,7 +339,7 @@ def Solubilidad_Gas(T, P, z1, max_iter=100, tol=1E-6):
 
             return {'c':[z,z],'q':1,'Liq':None,'Gas':sisV,'error':tol,'converg':True}
     else:
-        pb=PuntoBurbuja2(T,z,a,tol=tol)
+        pb=PuntoBurbuja2(T,z,a,P0=P if z0 is not None and len(z0)>2 else None, tol=tol)
         #print(np.round(pb*1e-5,3),np.round(P*1e-5,3))
         if np.round(pb*1e-5,3)<=np.round(P*1e-5,3):
             EOS_sisL=Sistema(a,phase='Liq')
@@ -349,7 +353,10 @@ def Solubilidad_Gas(T, P, z1, max_iter=100, tol=1E-6):
     # Tc = np.array([cp.PropsSI('TCRIT', es) for es in a])
     # Pc = np.array([cp.PropsSI('PCRIT', es) for es in a])
     #k = (Pc / P) * np.exp(5.37 * (1 + w) * (1 - Tc / T))
-    k = np.array([1-0.5-0.4,0.5,0.4])/np.array([1-2*0.005,0.005,0.005])
+    if z0 is None:
+        k = np.array([1-0.5-0.4,0.5,0.4])/np.array([1-2*0.005,0.005,0.005])
+    else:
+        k=z0[1]/z0[0]
     la=1
     gama=1
 
@@ -417,11 +424,15 @@ def Solubilidad_Gas(T, P, z1, max_iter=100, tol=1E-6):
 
 
 
-def PuntoBurbuja(T,x,Es,tol=1E-6):
+def PuntoBurbuja(T,x,Es,P0=None,tol=1E-9):
     w = np.array([cp.PropsSI('acentric', es) for es in Es])
     Tc = np.array([cp.PropsSI('TCRIT', es) for es in Es])
     Pc = np.array([cp.PropsSI('PCRIT', es) for es in Es])
-    P = np.sum(x*Pc * np.exp(5.37 * (1 + w) * (1 - Tc / T)))
+    
+    if P0 is None:
+        P = np.sum(x*Pc * np.exp(5.37 * (1 + w) * (1 - Tc / T)))
+    else:
+        P=P0
     #P=cp.PropsSI('P','T',T,'Q',1,'H2O')
 
     # Configurar las fracciones molares y especificar fase líquida
@@ -458,7 +469,7 @@ def PuntoBurbuja(T,x,Es,tol=1E-6):
     finally:
         del EOS_Liq,EOS_Gas
 
-def PuntoRocio(T,y,Es,tol=1E-6):
+def PuntoRocio(T,y,Es,P0=None,tol=1E-9):
     # w = np.array([cp.PropsSI('acentric', es) for es in Es])
     # Tc = np.array([cp.PropsSI('TCRIT', es) for es in Es])
     # Pc = np.array([cp.PropsSI('PCRIT', es) for es in Es])
@@ -470,7 +481,10 @@ def PuntoRocio(T,y,Es,tol=1E-6):
     # Configurar las fracciones molares y especificar fase vapor
     EOS_Gas=Sistema(components=Es, phase='Gas')
 
-    P=cp.PropsSI('P','T',T,'Q',1,'H2O')/(y[0])
+    if P0 is None:
+        P = P=cp.PropsSI('P','T',T,'Q',1,'H2O')/(y[0])
+    else:
+        P=P0
 
     def fsol(s1):
         s=np.abs(s1)
@@ -501,11 +515,15 @@ def PuntoRocio(T,y,Es,tol=1E-6):
     del EOS_Gas,EOS_Liq
     return P[0]
 
-def PuntoBurbuja2(T,x,Es,tol=1E-6):
+def PuntoBurbuja2(T,x,Es,P0=None, tol=1E-9):
     w = np.array([cp.PropsSI('acentric', es) for es in Es])
     Tc = np.array([cp.PropsSI('TCRIT', es) for es in Es])
     Pc = np.array([cp.PropsSI('PCRIT', es) for es in Es])
-    P = np.sum(x*Pc * np.exp(5.37 * (1 + w) * (1 - Tc / T)))
+
+    if P0 is None:
+        P = np.sum(x*Pc * np.exp(5.37 * (1 + w) * (1 - Tc / T)))
+    else:
+        P=P0
 
     # Configurar las fracciones molares y especificar fase líquida
     EOS_Liq=Sistema(components=Es, phase='Liq')
@@ -514,6 +532,7 @@ def PuntoBurbuja2(T,x,Es,tol=1E-6):
     EOS_Gas=Sistema(components=Es, phase='Gas')
 
     def fsol(P):
+
         k = (Pc / P) * np.exp(5.37 * (1 + w) * (1 - Tc / T))
         s=np.array([P,*k])
         la=1
@@ -545,12 +564,16 @@ def PuntoBurbuja2(T,x,Es,tol=1E-6):
     del EOS_Gas,EOS_Liq
     return P[0]
 
-def PuntoRocio2(T,y,Es,tol=1E-6):
+def PuntoRocio2(T,y,Es,P0=None,tol=1E-9):
     w = np.array([cp.PropsSI('acentric', es) for es in Es])
     Tc = np.array([cp.PropsSI('TCRIT', es) for es in Es])
     Pc = np.array([cp.PropsSI('PCRIT', es) for es in Es])
     #P = np.sum(y*Pc * np.exp(5.37 * (1 + w) * (1 - Tc / T)))
-    P=cp.PropsSI('P','T',T,'Q',1,'H2O')/(y[0])
+
+    if P0 is None:
+        P=cp.PropsSI('P','T',T,'Q',1,'H2O')/(y[0])
+    else:
+        P=P0
 
     # Configurar las fracciones molares y especificar fase líquida
     EOS_Liq=Sistema(components=Es, phase='Liq')

@@ -85,6 +85,7 @@ class PIDController:
         self.integral = 0
         self.prev_error = 0
         self.activo=activo
+        self.Mv=offset
 
     def calculate(self, measurement, dt):
         # Error calculation
@@ -101,12 +102,12 @@ class PIDController:
 
         # Control variable (Manipulated Variable, MV)
         MV1 = self.offset + P + self.integral + D
-        MV = max(self.min_Mv, min(MV1, self.max_Mv))
+        self.Mv = max(self.min_Mv, min(MV1, self.max_Mv))
 
         # Update previous error
         self.prev_error = error
 
-        return MV
+        return self.Mv
     
     def printData(self):
         return {
