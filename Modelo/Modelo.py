@@ -12,7 +12,7 @@ import time
 
 
 class Planta:
-    def __init__(self,T13,Q,I,Pca,Pan,sio=None,tol=1e-9):
+    def __init__(self,T13,Q,I,Pca,Pan,sio=None,tol=1e-8):
         
         self.logger = SocketLogger('Planta',sio=sio,planta=self)
         self.logger.setFormatter('[%(levelname)s][%(name)s]: %(message)s',PlantaFormat)
@@ -45,11 +45,11 @@ class Planta:
             'V102': FlashTanque([
                 [self.flujos['F6']],
                 [self.flujos['F7'], self.flujos['F3']]
-            ], logger=self.get_logger('V102'), name='V102',d=0.25,h=1,hL=0.3),
+            ], logger=self.get_logger('V102'), name='V102',d=0.25,h=1,hL=0.3,tol=self.tol),
             'V101': FlashTanque([
                 [self.flujos['F5'], self.flujos['F7'], self.flujos['F1']],
                 [self.flujos['F4'], self.flujos['F2']]
-            ], logger=self.get_logger('V101'),  name='V101',d=0.5,h=2.2,hL=0.5),
+            ], logger=self.get_logger('V101'),  name='V101',d=0.5,h=2.2,hL=0.5,tol=self.tol),
             'E101': IntercambiadorCalor([
                 [self.flujos['F8'], self.flujos['F4']],
                 [self.flujos['F9'], self.flujos['F10']]
@@ -146,13 +146,13 @@ class Planta:
 
         self.flujos['F13'].F=F40
         self.flujos['F13'].P=self.Pca
-        result_binarie=BinarieVLE(self.flujos['F13'].T,self.flujos['F13'].P,['H2O','O2'])
+        result_binarie=BinarieVLE(self.flujos['F13'].T,self.flujos['F13'].P,['H2O','O2'], tol=self.tol)
         self.flujos['F13'].z=[result_binarie['c'][0][0],0,result_binarie['c'][0][1]]
         self.flujos['F13'].update()
 
         self.flujos['F4'].F=F40
         self.flujos['F4'].P=self.Pca
-        result_binarie=BinarieVLE(self.flujos['F13'].T,self.flujos['F13'].P,['H2O','O2'])
+        result_binarie=BinarieVLE(self.flujos['F13'].T,self.flujos['F13'].P,['H2O','O2'], tol=self.tol)
         self.flujos['F4'].z=[result_binarie['c'][0][0],0,result_binarie['c'][0][1]]
         self.flujos['F4'].update()
 

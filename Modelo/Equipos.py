@@ -163,9 +163,9 @@ class ElectrolizadorPEM:
         self.presion_anodo=self.flujos[1][1].P
         self.presion_catodo=self.flujos[1][0].P
         # Cálculos de equilibrio de solubilidad H2 y O2
-        s_ca = BinarieVLE(self.T, self.presion_catodo, ['H2O', 'O2'])
+        s_ca = BinarieVLE(self.T, self.presion_catodo, ['H2O', 'O2'], tol=self.tol)
         y1 = s_ca['c'][0]
-        s_an = BinarieVLE(self.T, self.presion_anodo, ['H2O', 'H2'])
+        s_an = BinarieVLE(self.T, self.presion_anodo, ['H2O', 'H2'], tol=self.tol)
         y2 = s_an['c'][0]
 
         # Crear sistemas de flujo líquido con fracciones molares
@@ -188,9 +188,9 @@ class ElectrolizadorPEM:
         self.presion_anodo=self.flujos[1][1].P
         self.presion_catodo=self.flujos[1][0].P
         # Cálculos de equilibrio de solubilidad H2 y O2
-        s_ca = BinarieVLE(self.T, self.presion_catodo, ['H2O', 'O2'])
+        s_ca = BinarieVLE(self.T, self.presion_catodo, ['H2O', 'O2'], tol=self.tol)
         y1 = s_ca['c'][0]
-        s_an = BinarieVLE(self.T, self.presion_anodo, ['H2O', 'H2'])
+        s_an = BinarieVLE(self.T, self.presion_anodo, ['H2O', 'H2'], tol=self.tol)
         y2 = s_an['c'][0]
 
         # Crear sistemas de flujo líquido con fracciones molares
@@ -318,7 +318,7 @@ class ElectrolizadorPEM:
 
 #Tanques de separacion
 class FlashTanque:
-    def __init__(self, flujos,d=None,h=None,hL=None,name='',logger=None):
+    def __init__(self, flujos,d=None,h=None,hL=None,name='',logger=None, tol=1e-9):
         self.flujos = flujos
         self.T=None
         self.name=name
@@ -328,6 +328,7 @@ class FlashTanque:
         self.Liqlevel=hL
         self.flujo_temporal=None
         self.logger = logger or SocketLogger('FlashTanque')
+        self.tol=tol
         self.dinamico={
             'T':{'title' : 'Temperatura','xlabel': 'Tiempo (min)','ylabel1': 'Temperatura',
                     'trazas':[
@@ -387,6 +388,7 @@ class FlashTanque:
                     'n_liq':0,
                     'x':np.array([1,0,0]),
                     'y':np.array([1,0,0]),
+                    'z0':None
                 },
         }
 
@@ -433,13 +435,13 @@ class FlashTanque:
         return F, z / F if F != 0 else np.array([0, 0, 0])
     
     # Método para crear un flujo temporal para determinar la fase de salida
-    def crear_flujo_temporal(self, F, z):
+    def crear_flujo_temporal(self, F, z, z0: list|None=None):
         if F != 0:
-            F_tem = Flujo(self.T, self.P, F, z, ['H2O', 'H2', 'O2'])
-            F_tem.update()
+            F_tem = Flujo(self.T, self.P, F, z, ['H2O', 'H2', 'O2'], tol=self.tol)
+            F_tem.update(z0)
         else:
-            F_tem = Flujo(self.T, self.P, 0, self.flujos[0][0].z, ['H2O', 'H2', 'O2'])
-            F_tem.update()
+            F_tem = Flujo(self.T, self.P, 0, self.flujos[0][0].z, ['H2O', 'H2', 'O2'], tol=self.tol)
+            F_tem.update(z0)
         return F_tem
     
     # Método para asignar temperatura y presión a los flujos de salida
@@ -553,7 +555,7 @@ class FlashTanque:
 
         Fgi, zgi = self.calcular_flujo_total_y_composicion()
         FLi, zLi = self.calcular_flujo_total_y_composicion(q=0)
-        F_tem = self.crear_flujo_temporal(Fgi, zgi)
+        F_tem = self.crear_flujo_temporal(Fgi, zgi, self.dinamico['F']['z0'])
         q=F_tem.q
         if F_tem.q == 1:
             ye=np.array([0,0,0])
@@ -636,12 +638,15 @@ class FlashTanque:
         self.flujos[1][0].P=self.P
         self.flujos[1][0].T=self.T
         self.flujos[1][0].z=self.dinamico['F']['x']
-        self.flujos[1][0].update()
 
         self.flujos[1][1].P=self.P
         self.flujos[1][1].T=self.T
         self.flujos[1][1].z=self.dinamico['F']['y']
-        self.flujos[1][1].update()
+
+        self.dinamico['F']['z0']=[self.flujos[1][0].z,self.flujos[1][1].z,self.P]
+
+        self.flujos[1][0].update(z0=[self.flujos[1][0].z,self.flujos[1][1].z,self.P])
+        self.flujos[1][1].update(z0=[self.flujos[1][0].z,self.flujos[1][1].z,self.P])
 
         if self.Liqlevel / self.h > 0.9:
             self.logger.error('El nivel del tanque ha alcanzado un nivel alto, está al 90% de su capacidad total.')
@@ -651,6 +656,7 @@ class FlashTanque:
     def reset_dinamics(self):
         self.T=self.dinamico['T']['T0']
         self.P=self.dinamico['P']['P0']
+        self.dinamico['F']['z0']=None
     
     def dete_data_dinamic(self):
         for key in self.dinamico:
