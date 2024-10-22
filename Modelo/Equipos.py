@@ -7,6 +7,7 @@ import scipy.optimize as sop
 import scipy.integrate as sint
 import json
 from Modelo.Socket_logger import SocketLogger
+import time
 
 jo_an2=7.3849e-09
 la=0.5514
@@ -230,6 +231,11 @@ class ElectrolizadorPEM:
         # Resolver para encontrar la temperatura de salida usando el método de Newton
         sop.fsolve(resolver_ecuacion_temperatura, x0=self.flujos[0][0].T+1)
     
+    def setValuesDinamics(self):
+        self.dinamico['T']['T0']=self.T
+        self.dinamico['V']['V0']=self.V
+        self.dinamico['V']['I0']=self.I
+    
     def dif_dt(self):
         Cth=162116 #j/K^-1
         self.calcular_voltaje()
@@ -409,7 +415,7 @@ class FlashTanque:
     # Método para calcular los flujos de salida del tanque
     def calcular_flujos(self):
         # Determinar la presión mínima de los flujos de entrada
-        self.P = np.min([Fi.P for Fi in self.flujos[0]])
+        self.P = self.flujos[1][1].P
         
         # Calcular flujos totales y composiciones ponderadas
         F, z = self.calcular_flujo_total_y_composicion()
@@ -511,6 +517,11 @@ class FlashTanque:
         
         # Retornar el balance de energía final
         return self.balance_energia()
+    
+    def setValuesDinamics(self):
+        self.dinamico['T']['T0']=self.T
+        self.dinamico['P']['P0']=self.P
+        self.dinamico['F']['z0']=None
     
     def Vol(self):
         h2=0.1935*self.d
@@ -632,9 +643,6 @@ class FlashTanque:
         self.dinamico['L']['trazas'][0]['y'].append(np.round(self.dinamico['F']['n_liq']*4/(self.flujos[1][0].D*np.pi*(self.d**2)),4))
         self.Liqlevel=self.dinamico['L']['trazas'][0]['y'][-1]
 
-        for flujo in self.flujos[0]:
-            flujo.P=self.P
-
         self.flujos[1][0].P=self.P
         self.flujos[1][0].T=self.T
         self.flujos[1][0].z=self.dinamico['F']['x']
@@ -644,9 +652,14 @@ class FlashTanque:
         self.flujos[1][1].z=self.dinamico['F']['y']
 
         self.dinamico['F']['z0']=[self.flujos[1][0].z,self.flujos[1][1].z,self.P]
-
         self.flujos[1][0].update(z0=[self.flujos[1][0].z,self.flujos[1][1].z,self.P])
         self.flujos[1][1].update(z0=[self.flujos[1][0].z,self.flujos[1][1].z,self.P])
+
+        # self.dinamico['F']['z0']=None
+        # self.flujos[1][0].update()
+        # self.flujos[1][1].update()
+
+        
 
         if self.Liqlevel / self.h > 0.9:
             self.logger.error('El nivel del tanque ha alcanzado un nivel alto, está al 90% de su capacidad total.')
@@ -718,8 +731,10 @@ class IntercambiadorCalor:
         self.name=name
         self.logger = logger or SocketLogger('Intercambiador')
 
+        self.diferential_Y=None
+
         self.dinamico={
-            'T':{'title' : 'Temperatura','xlabel': 'Tiempo (min)','ylabel1': '°C',
+            'Tt':{'title' : 'Temperatura Tubos','xlabel': 'Tiempo (min)','ylabel1': '°C',
                     'trazas':[
                         {
                             'name': 'Temperatura Tubos',
@@ -727,7 +742,12 @@ class IntercambiadorCalor:
                             'y': [],
                             'type': 'scatter',
                             'color': '#00f7ff',
-                        },
+                        }
+                    ],
+                    'Tt0':self.flujos[1][0].T,
+            },
+            'Ts':{'title' : 'Temperatura Coraza','xlabel': 'Tiempo (min)','ylabel1': '°C',
+                    'trazas':[
                         {
                             'name': 'Temperatura Coraza',
                             'x': [],
@@ -736,9 +756,8 @@ class IntercambiadorCalor:
                             'color': '#ff5757',
                         }
                     ],
-                    'Tt0':self.flujos[1][0].T,
                     'Ts0':self.flujos[1][1].T
-                },
+            }
         }
     
     # Función para calcular el coeficiente de transferencia de calor en la coraza
@@ -933,12 +952,21 @@ class IntercambiadorCalor:
             return self.sistema_diferencial1(t, Y, self.L)
 
         def Tsol(Y):
-            sol = sint.solve_ivp(sistema_ecuaciones, [0, self.L], [self.flujos[0][0].T, Y[0], self.flujos[0][0].P, Y[1]], t_eval=[0, self.L])
+            sol = sint.solve_ivp(sistema_ecuaciones, [0, self.L], [self.flujos[0][0].T, Y[0], self.flujos[0][0].P, Y[1]], t_eval=[0, self.L], method='LSODA')
             error=np.array([self.flujos[0][1].T - sol.y[1][-1], self.flujos[0][1].P - sol.y[-1][-1]])
             return [self.flujos[0][1].T - sol.y[1][-1], self.flujos[0][1].P - sol.y[-1][-1]]
+        #start_time = time.time()
+        x0=[(self.flujos[0][0].T*self.flujos[0][0].F + self.flujos[0][1].T*self.flujos[0][1].F) / (self.flujos[0][1].F+self.flujos[0][0].F), self.flujos[0][1].P] if self.diferential_Y is None else self.diferential_Y
 
-        Y = sop.fsolve(Tsol, x0=[(self.flujos[0][0].T*self.flujos[0][0].F + self.flujos[0][1].T*self.flujos[0][1].F) / (self.flujos[0][1].F+self.flujos[0][0].F), self.flujos[0][1].P], xtol=1e-10)
-        sol = sint.solve_ivp(sistema_ecuaciones, [0,self.L], [self.flujos[0][0].T, Y[0], self.flujos[0][0].P, Y[1]], t_eval=t_eval_i)
+        Y = sop.fsolve(Tsol, x0=[(self.flujos[0][0].T*self.flujos[0][0].F + self.flujos[0][1].T*self.flujos[0][1].F) / (self.flujos[0][1].F+self.flujos[0][0].F), self.flujos[0][1].P], xtol=1e-6)
+
+        self.diferential_Y=Y
+        #print('E101 fsol', time.time()-start_time)
+
+        #start_time = time.time()
+        sol = sint.solve_ivp(sistema_ecuaciones, [0,self.L], [self.flujos[0][0].T, Y[0], self.flujos[0][0].P, Y[1]], t_eval=t_eval_i, method='LSODA')
+        #print('E101 solve_ivp', time.time()-start_time)
+        
         self.Temperatura_data=[sol.y,sol.t]
 
         self.flujos[1][0].T = self.Temperatura_data[0][0][-1]
@@ -954,10 +982,17 @@ class IntercambiadorCalor:
         self.flujos[1][1].update()
 
         self.duty = self.flujos[1][0].H - self.flujos[0][0].H
+
+        self.tubos_temperatura_in = self.flujos[0][0].T
+        self.tubos_temperatura_out = self.flujos[1][0].T
+        self.coraza_temperatura_in = self.flujos[0][1].T
+        self.coraza_temperatura_out = self.flujos[1][1].T
+
         return sol
     
     def calcular_flujo_CW(self):
         self.logger.procesando('Calculando flujo de agua en la coraza')
+        self.diferential_Y=None
         
         def Fsol(F, Tf):
             self.flujos[0][0].F = F
@@ -980,6 +1015,10 @@ class IntercambiadorCalor:
         Ht=self.flujos[0][0].H-self.flujos[1][0].H+self.duty
         Hs=self.flujos[0][1].H-self.flujos[1][1].H-self.duty
         return np.round([Ht,Hs],2)
+    
+    def setValuesDinamics(self):
+        self.dinamico['Tt']['Tt0']=self.tubos_temperatura_out
+        self.dinamico['Ts']['Ts0']=self.coraza_temperatura_out
     
     def dif_dt(self):
         Tt0=self.flujos[1][0].T
@@ -1009,28 +1048,28 @@ class IntercambiadorCalor:
     
     def dinamico_step(self,dt):
         if len(self.dinamico['T']['trazas'][0]['x'])==0:
-            self.dinamico['T']['trazas'][0]['x'].append(dt/60)
-            self.dinamico['T']['Tt0']=self.flujos[1][0].T
-            self.dinamico['T']['trazas'][1]['x'].append(dt/60)
-            self.dinamico['T']['Ts0']=self.flujos[1][1].T
+            self.dinamico['Tt']['trazas'][0]['x'].append(dt/60)
+            self.dinamico['Tt']['Tt0']=self.flujos[1][0].T
+            self.dinamico['Ts']['trazas'][0]['x'].append(dt/60)
+            self.dinamico['Ts']['Ts0']=self.flujos[1][1].T
 
         else:
-            self.dinamico['T']['trazas'][0]['x'].append(dt/60+self.dinamico['T']['trazas'][0]['x'][-1])
-            self.dinamico['T']['trazas'][1]['x'].append(dt/60+self.dinamico['T']['trazas'][1]['x'][-1])
+            self.dinamico['Tt']['trazas'][0]['x'].append(dt/60+self.dinamico['Tt']['trazas'][0]['x'][-1])
+            self.dinamico['Ts']['trazas'][0]['x'].append(dt/60+self.dinamico['Ts']['trazas'][0]['x'][-1])
         
         dt_time=self.dif_dt()
         self.flujos[1][0].T=dt_time[0]*dt+self.flujos[1][0].T
-        self.dinamico['T']['trazas'][0]['y'].append(self.flujos[1][0].T-273.15)
+        self.dinamico['Tt']['trazas'][0]['y'].append(self.flujos[1][0].T-273.15)
 
         self.flujos[1][1].T=dt_time[1]*dt+self.flujos[1][1].T
-        self.dinamico['T']['trazas'][1]['y'].append(self.flujos[1][1].T-273.15)
+        self.dinamico['Ts']['trazas'][0]['y'].append(self.flujos[1][1].T-273.15)
     
     
     def dete_data_dinamic(self):
-        self.dinamico['T']['trazas'][0]['x']=[]
-        self.dinamico['T']['trazas'][1]['y']=[]
-        self.dinamico['T']['trazas'][0]['x']=[]
-        self.dinamico['T']['trazas'][1]['y']=[]
+        self.dinamico['Tt']['trazas'][0]['x']=[]
+        self.dinamico['Tt']['trazas'][0]['y']=[]
+        self.dinamico['Ts']['trazas'][0]['x']=[]
+        self.dinamico['Ts']['trazas'][0]['y']=[]
 
     
     def printData(self):
@@ -1044,6 +1083,10 @@ class IntercambiadorCalor:
             'TCwin' : self.flujos[1][0].T,
             'Tout'  : self.flujos[0][1].T,
             'TCwout': self.flujos[1][1].T,
+            'Pin'   : self.flujos[0][0].P,
+            'PCwin' : self.flujos[1][0].P,
+            'Pout'  : self.flujos[0][1].P,
+            'PCwout': self.flujos[1][1].P,
             'duty'  : self.duty,
             'graficas' : {
                 'name' : 'Perfiles de temperatura',

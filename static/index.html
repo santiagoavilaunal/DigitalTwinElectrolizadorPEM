@@ -34,8 +34,13 @@
         <h4 id="info_type" style="font-size: 12px;">Diagrama y Control</h4>
     </div>
 
+    <div class="info_conten debug info_des" id="config" onclick="change_view_variable(this)" style="z-index: 10000;top:180px;min-height: auto;padding-bottom: 3px; cursor: pointer;">
+        <h4 id="info_type" style="font-size: 12px;margin-bottom:5px;">Visualización</h4>
+        <h4 id="info_type" class="info_type-view-name" style="font-size: 10px;margin-top:0px;">Básica</h4>
+    </div>
+
     <img src="./assets/logo.png" alt="" style="width: 280px; position: absolute; top: 0px; left: 0px;user-select: none;">
-    
+    <canvas id="colorbar" width="100px" height="250px" style="position: absolute;top: calc(50% - 125px);left: 10px;"></canvas>
     
     <script>
         var plat_app=null;
@@ -92,6 +97,7 @@
         );
 
     </script>
+    <script src="./libs/nodeplatilla.js"></script>
     <script src="./libs/script.js"></script>
     <script src="./libs/dinamico.js"></script>
 </body>

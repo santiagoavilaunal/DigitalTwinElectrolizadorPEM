@@ -26,6 +26,8 @@ var app={
         var INTERSECTED=null;
         var intersects=null;
 
+        this.THREE=THREE;
+
         this.load= function(div,guiDOM){
             this.camera = new THREE.PerspectiveCamera( 50, div.clientWidth / div.clientHeight, 0.1, 2000.00);
             this.controls = new OrbitControls( this.camera, guiDOM);
@@ -103,6 +105,10 @@ var app={
             event.preventDefault();
 
             this.click();
+
+            if(pid && INTERSECTED){
+                pid.cy.fit(pid.cy.getElementById(INTERSECTED.name+'-diagram'), 100);
+            }
         }
 
         this.click=()=>{
@@ -140,13 +146,19 @@ var app={
             mouse.y = - ( event.clientY / this.renderer.domElement.clientHeight ) * 2 + 1;
         }
 
-        var objecto_emissive = (objec,emissive) =>{
+        this.objecto_emissive = (objec,emissive) =>{
+
+            let color1 = (this.Scene_objects[objec.name].color)? this.Scene_objects[objec.name].color : new THREE.Color();
+            let color2 = new THREE.Color(emissive);
+
+            color2.lerp(color1, 0.5);
+
             if(objec.name=='EK101'){
                 objec.children.forEach(subo_bjetos => {
-                    subo_bjetos.material.emissive.setHex(emissive);
+                    subo_bjetos.material.emissive.setHex((emissive===0x000000 && this.Scene_objects[objec.name].color)? color2.getHex() : emissive);
                 });
             }else{
-                objec.material.emissive.setHex(emissive);
+                objec.material.emissive.setHex((emissive===0x000000 && this.Scene_objects[objec.name].color)? color2.getHex() : emissive);
             }
         }
         
@@ -179,7 +191,7 @@ var app={
             if(object_select){
                 if(INTERSECTED != object_select){
                     if(INTERSECTED){
-                        objecto_emissive(INTERSECTED,0x000000);
+                        this.objecto_emissive(INTERSECTED,0x000000);
                     }
                     
                     if(pid && on_pid){
@@ -188,7 +200,7 @@ var app={
 
                     INTERSECTED = object_select;
                     this.equipo_hover=this.Scene_objects[INTERSECTED.name];
-                    objecto_emissive(INTERSECTED,0x008a84);
+                    this.objecto_emissive(INTERSECTED,0x008a84);
 
                     if(pid && on_pid){
                         pid_selec(INTERSECTED.name);
@@ -196,7 +208,7 @@ var app={
                 }
             }else{
                 if(INTERSECTED){
-                    objecto_emissive(INTERSECTED,0x000000);
+                    this.objecto_emissive(INTERSECTED,0x000000);
                     INTERSECTED=null;
                 }
             }

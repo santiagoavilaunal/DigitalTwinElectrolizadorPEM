@@ -58,7 +58,7 @@ Input_Value=[
     {
         Title: 'Velociodad simulación',
         input_data: 1,
-        unidad: 'min/s',
+        unidad: 's',
         color: 'white',
         incoText:'<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-play-fill" viewBox="0 0 16 16"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/></svg>',
         type:2,
@@ -252,6 +252,10 @@ socket.on("estacionario_resultado", (data) => {
             show_data_ventana(key,ventanas[tipo][key].type,false);
         });
     });
+
+    update_visual_color();
+
+    update_value_control();
 });
 
 function estacionario_calcular(){
@@ -867,6 +871,8 @@ function crear_PID_ventana(contenedorDiv){
         contenedorDiv.appendChild(pid.containerElement);
     }
 
+    update_value_control();
+
 }
 
 function pid_selec(equipo,on=true){
@@ -1036,151 +1042,167 @@ socket.on("get_PID_control", (data) => {
 
     create_type_node('PID');
 
-    if (nodeVentanas['PID'][dataPID.input.id]===undefined){
-        nodeVentanas['PID'][dataPID.input.id]=crearNodeVentanaEdicion({
-            title: 'Control PID '+dataPID.input.id,
-            subconfigs: [
-                {
-                    title:'Estado de control',
-                    inputs:[
-                        {
-                            name: dataPID.data.activo? 'Lazo cerrado': 'Lazo abierto', 
-                            type: 'checkbox', value: dataPID.data.activo, 
-                            fun: (event)=>{
-                                event.target.parentElement.childNodes[0].textContent = event.target.checked? 'Lazo cerrado': 'Lazo abierto';
-                                nodeVentanas['PID'][dataPID.input.id].PIDcontroler.activo=event.target.checked;
-                                if(ventanas[4] && ventanas[4]['VC'+dataPID.input.id]){
-                                    ventanas[4]['VC'+dataPID.input.id]['activo']=dataPID.data.activo;
-                                }
-                                socket.emit("lazo", nodeVentanas['PID'][dataPID.input.id].PIDcontroler);
-                            }
-                        }
-                    ]
-                },
-                {
-                    title: 'Constantes',
-                    inputs: [
-                        {
-                            name: 'Proporcional', type: 'number', value: dataPID.data.Kp,
-                            fun: (event)=>{
-                                nodeVentanas['PID'][dataPID.input.id].PIDcontroler.Kp=parseFloat(event.target.value);
-                                socket.emit("lazo", nodeVentanas['PID'][dataPID.input.id].PIDcontroler);
-                            }
-                        },
-                        { 
-                            name: 'Integral', type: 'number', value: dataPID.data.Ki,
-                            fun: (event)=>{
-                                nodeVentanas['PID'][dataPID.input.id].PIDcontroler.Ki=parseFloat(event.target.value);
-                                socket.emit("lazo", nodeVentanas['PID'][dataPID.input.id].PIDcontroler);
-                            }
-                        },
-                        { 
-                            name: 'Derivativo', type: 'number', value: dataPID.data.Kd,
-                            fun: (event)=>{
-                                nodeVentanas['PID'][dataPID.input.id].PIDcontroler.Kd=parseFloat(event.target.value);
-                                socket.emit("lazo", nodeVentanas['PID'][dataPID.input.id].PIDcontroler);
-                            }
-                        }
-                    ]
-                }
-            ]
-        });
-
-        let node_control_pos=pid.cy.$('#'+dataPID.input.nodeid+'-diagram').position();
-
-        let node=pid.cy.add({
-            group: 'nodes',
-            data: { id: 'n3-windows-control-'+dataPID.input.id},
-        });
-
-        nodeVentanas['PID'][dataPID.input.id].element.style.transformOrigin = "0 0";
-
-        node.style({
-            'width':1,
-            'height':1,
-            'shape': 'rectangle',
-            'background-opacity':0
-        });
-
-        node.position(
-            {
-                x:node_control_pos.x+pid.cy.$('#'+dataPID.input.nodeid+'-diagram').with()/2,
-                y:node_control_pos.y+pid.cy.$('#'+dataPID.input.nodeid+'-diagram').height()/2
-            }
-        );
-
-        let line_nodes=pid.cy.add([
-            {
-                group: 'edges',
-                data: {
-                    id: 'edge-line-control-'+dataPID.input.id,
-                    source: dataPID.input.nodeid+'-diagram',
-                    target: 'n3-windows-control-'+dataPID.input.id
-                }
-            }
-        ]);
-
-        line_nodes.style({
-            'width': 0.5,
-            'line-color': pid.isblackstyle? 'white' :'black',
-            'target-arrow-color': pid.isblackstyle? 'white' :'black',
-            'target-arrow-shape': 'none',
-            'line-color': pid.isblackstyle? 'white' :'black',
-            "curve-style": "round-taxi",
-            "taxi-radius": 50
-        });
-
-        node_windows_updatepost(node, nodeVentanas['PID'][dataPID.input.id].element);
-
-        nodeVentanas['PID'][dataPID.input.id].funs.drag=function(event, ui){
-            node_update_ventana(node, nodeVentanas['PID'][dataPID.input.id].element);
-        }
-
-        nodeVentanas['PID'][dataPID.input.id].funs.closed=(ventana)=>{
-            line_nodes.remove();
-            node.remove();
-        }
-
-        pid.cy.on('pan', function() {
-            node_windows_updatepost(node, nodeVentanas['PID'][dataPID.input.id].element);
-        });
+    dataPID,nodeVentanas['PID'][dataPID.input.id]=create_config_node(
+        'PID',
+        dataPID,
+        nodeVentanas['PID'][dataPID.input.id]
+    );
     
-
-        pid.cy.on('zoom', function() {
-            node_windows_updatepost(node, nodeVentanas['PID'][dataPID.input.id].element);
-        })
-
-        nodeVentanas['PID'][dataPID.input.id].node=node;
-        nodeVentanas['PID'][dataPID.input.id].line_nodes=line_nodes;
-
-    }
-
-    if (!pid.containerElement.contains(nodeVentanas['PID'][dataPID.input.id].element)) {
-        pid.containerElement.appendChild(nodeVentanas['PID'][dataPID.input.id].element);
-        pid.cy.add(nodeVentanas['PID'][dataPID.input.id].node);
-        pid.cy.add(nodeVentanas['PID'][dataPID.input.id].line_nodes);
-    }
-
-    nodeVentanas['PID'][dataPID.input.id].data.subconfigs[1].inputs[0].element.value=dataPID.data.Kp;
-    nodeVentanas['PID'][dataPID.input.id].data.subconfigs[1].inputs[1].element.value=dataPID.data.Ki;
-    nodeVentanas['PID'][dataPID.input.id].data.subconfigs[1].inputs[2].element.value=dataPID.data.Kd;
-    nodeVentanas['PID'][dataPID.input.id].data.subconfigs[0].inputs[0].element.checked=dataPID.data.activo;
     if(ventanas[4] && ventanas[4]['VC'+dataPID.input.id]){
         ventanas[4]['VC'+dataPID.input.id]['activo']=dataPID.data.activo;
     }
 
-    let rectsize=nodeVentanas['PID'][dataPID.input.id].element.getBoundingClientRect();
+    nodeVentanas['PID'][dataPID.input.id].PIDcontroler=dataPID.data;
+    nodeVentanas['PID'][dataPID.input.id].PIDcontroler.loop='VC'+dataPID.input.id;
+});
 
-    nodeVentanas['PID'][dataPID.input.id].node.style({
+function configplatilla(type, data){
+    let platilla = platillastylenodeconfig(data);
+    return platilla[type] || {};
+}
+
+function create_config_node(type,data,nodeV){
+    let nodeVentana = nodeV;
+    if(nodeVentana===undefined){
+        nodeVentana=crearNodeVentanaEdicion(configplatilla(type, data));
+        let nodes=creat_node_diagram(nodeVentana,data);
+        nodeVentana.node=nodes.node;
+        nodeVentana.line_nodes=nodes.edge;
+    }
+
+    if (!pid.containerElement.contains(nodeVentana.element)) {
+        pid.containerElement.appendChild(nodeVentana.element);
+        pid.cy.add(nodeVentana.node);
+        pid.cy.add(nodeVentana.line_nodes);
+    }
+
+    let rectsize=nodeVentana.element.getBoundingClientRect();
+
+    nodeVentana.node.style({
         'width':rectsize.width/pid.cy.zoom(),
         'height':rectsize.height/pid.cy.zoom(),
     });
 
-    node_update_ventana(nodeVentanas['PID'][dataPID.input.id].node, nodeVentanas['PID'][dataPID.input.id].element);
+    node_update_ventana(nodeVentana.node, nodeVentana.element);
+    update_value_node_config(nodeVentana, data.data);
 
-    nodeVentanas['PID'][dataPID.input.id].PIDcontroler=dataPID.data;
-    nodeVentanas['PID'][dataPID.input.id].PIDcontroler.loop='VC'+dataPID.input.id;
-});
+    return nodeVentana
+}
+
+function update_value_node_config(nodeVentana, data){
+    nodeVentana.data.subconfigs.forEach(subconfig=>{
+        subconfig.inputs.forEach(input=>{
+            if(input.type!=='checkbox'){
+                input.element.value=data[input.key];
+            }else{
+                input.element.checked=data[input.key];
+            }
+        });
+    });
+}
+
+function update_value_control(){
+    if(!nodeVentanas['PID']){
+        return;
+    }
+
+    Object.keys(plantadata.Valvulas).forEach(valvula=>{
+        if(nodeVentanas['PID'][valvula.replace('VC','')]){
+            update_value_node_config(nodeVentanas['PID'][valvula.replace('VC','')],plantadata.Valvulas[valvula].control);
+            nodeVentanas['PID'][valvula.replace('VC','')].PIDcontroler=plantadata.Valvulas[valvula].control;
+        }
+    })
+}
+
+function send_PID_controller(event, parameter, id) {
+    const value = parseFloat(event.target.value);
+    const pidController = nodeVentanas['PID'][id].PIDcontroler;
+
+    if (!isNaN(value)) {
+        pidController[parameter] = value;
+        socket.emit("lazo", pidController);
+    } else {
+        console.error("Invalid value for parameter:", parameter);
+    }
+}
+
+function active_PID_Controller(event,id){
+    event.target.parentElement.childNodes[0].textContent = event.target.checked? 'Lazo cerrado': 'Lazo abierto';
+    nodeVentanas['PID'][id].PIDcontroler.activo=event.target.checked;
+    if(ventanas[4] && ventanas[4]['VC'+id]){
+        ventanas[4]['VC'+id]['activo']=event.target.checked;
+    }
+    socket.emit("lazo", nodeVentanas['PID'][id].PIDcontroler);
+}
+
+function creat_node_diagram(nodeVentana,data){
+    let node_diagram_pos=pid.cy.$('#'+data.input.nodeid+'-diagram').position();
+
+    let node=pid.cy.add({
+        group: 'nodes',
+        data: { id: 'n3-windows-control-'+data.input.id},
+    });
+
+    nodeVentana.element.style.transformOrigin = "0 0";
+
+    node.style({
+        'width':1,
+        'height':1,
+        'shape': 'rectangle',
+        'background-opacity':0
+    });
+
+    node.position(
+        {
+            x:node_diagram_pos.x+pid.cy.$('#'+data.input.nodeid+'-diagram').with()/2,
+            y:node_diagram_pos.y+pid.cy.$('#'+data.input.nodeid+'-diagram').height()/2
+        }
+    );
+
+    let line_nodes=pid.cy.add([
+        {
+            group: 'edges',
+            data: {
+                id: 'edge-line-control-'+data.input.id,
+                source: data.input.nodeid+'-diagram',
+                target: 'n3-windows-control-'+data.input.id
+            }
+        }
+    ]);
+
+    line_nodes.style({
+        'width': 0.5,
+        'line-color': pid.isblackstyle? 'white' :'black',
+        'target-arrow-color': pid.isblackstyle? 'white' :'black',
+        'target-arrow-shape': 'none',
+        'line-color': pid.isblackstyle? 'white' :'black',
+        "curve-style": "round-taxi",
+        "taxi-radius": 50
+    });
+
+    node_windows_updatepost(node, nodeVentana.element);
+
+    nodeVentana.funs.drag=function(event, ui){
+        node_update_ventana(node, nodeVentana.element);
+    }
+
+    nodeVentana.funs.closed=(ventana)=>{
+        line_nodes.remove();
+        node.remove();
+    }
+
+    pid.cy.on('pan', function() {
+        node_windows_updatepost(node, nodeVentana.element);
+    });
+
+
+    pid.cy.on('zoom', function() {
+        node_windows_updatepost(node, nodeVentana.element);
+    })
+
+    return {node:node, edge:line_nodes}
+}
+
 
 function node_update_ventana(node, nodeWindowelement){
     let rect=nodeWindowelement.getBoundingClientRect();
@@ -1206,4 +1228,207 @@ function node_windows_updatepost(node, nodeWindowelement){
     nodeWindowelement.style.top=position.y-node.height()*pid.cy.zoom()/2+'px';
     nodeWindowelement.style.left=position.x-node.width()*pid.cy.zoom()/2+'px';
 
+}
+
+function clarcolorbar(){
+    const colorBarCanvas = document.getElementById('colorbar');
+    const context = colorBarCanvas.getContext('2d');
+    context.clearRect(0, 0, colorBarCanvas.width, colorBarCanvas.height);
+}
+
+function createColorBar(min, max, steps, unidad, tinks = 10, palette='jet') {
+    const colorBarCanvas = document.getElementById('colorbar');
+    const context = colorBarCanvas.getContext('2d');
+
+    // Limpiar el canvas antes de dibujar
+    context.clearRect(0, 0, colorBarCanvas.width, colorBarCanvas.height);
+
+    for (let i = 0; i < steps; i++) {
+        // Calcular el valor para el color
+        const value = max - (max - min) * (i / (steps - 1));
+        const rgb_color=getColorForValue(value, min, max, palette);
+        const color = `rgb(${rgb_color.r},${rgb_color.g},${rgb_color.b})`;
+        context.fillStyle = color;
+
+        // Dibuja el rectángulo correspondiente en la barra de colores
+        context.fillRect(0, (colorBarCanvas.height * i) / (steps - 1), 27, colorBarCanvas.height / (steps - 1) + 1);
+    }
+
+    // Dibujar la línea central
+    context.beginPath();
+    context.moveTo(31, 0);
+    context.lineTo(31, colorBarCanvas.height);
+    context.lineWidth = 1; // Cambiar el grosor de la línea si es necesario
+    context.strokeStyle = 'rgb(10,10,10)'; // Establecer el color de la línea
+    context.stroke();
+
+    context.strokeStyle = 'rgb(10,10,10)'; 
+    for (let i = 0; i < tinks; i++) {
+        const value = max - (max - min) * (i / (tinks - 1));
+        context.beginPath();
+        context.moveTo(31, (colorBarCanvas.height * i) / (tinks - 1));
+        context.lineTo(45, (colorBarCanvas.height * i) / (tinks - 1));
+        context.lineWidth = 1; // Grosor de las líneas de tinks
+        context.stroke();
+
+        context.font = "10px Arial";
+        context.fillStyle = 'black';
+        context.fillText(value.toFixed(1)+" "+unidad,35,(colorBarCanvas.height * i) / (tinks - 1)-3);
+    }
+}
+
+function getColorForValue(value, min, max, style = 'jet') {
+    const normalizedValue = Math.min(Math.max((value - min) / (max - min), 0), 1);
+
+    const palettes = {
+        jet: [
+            [0, 0, 128],   // Azul oscuro
+            [0, 0, 255],   // Azul
+            [0, 255, 255], // Cian
+            [0, 255, 0],   // Verde
+            [255, 255, 0], // Amarillo
+            [255, 0, 0],   // Rojo
+            [128, 0, 0]    // Rojo oscuro
+        ],
+        grayscale: [
+            [0, 0, 0],     // Negro
+            [255, 255, 255] // Blanco
+        ],
+        rainbow: [
+            [148, 0, 211], // Violeta
+            [75, 0, 130],  // Índigo
+            [0, 0, 255],   // Azul
+            [0, 255, 0],   // Verde
+            [255, 255, 0], // Amarillo
+            [255, 127, 0], // Naranja
+            [255, 0, 0]    // Rojo
+        ],
+        inferno: [
+            [0, 0, 0],     // Negro
+            [31, 12, 72],  // Azul oscuro
+            [85, 15, 109], // Morado oscuro
+            [187, 55, 84], // Rojo púrpura
+            [249, 142, 0], // Naranja
+            [252, 255, 164] // Amarillo claro
+        ],
+        viridis: [
+            [68, 1, 84],   // Azul oscuro
+            [72, 40, 120], // Púrpura
+            [54, 92, 141], // Azul
+            [39, 140, 142],// Verde azulado
+            [31, 186, 114],// Verde
+            [74, 220, 65], // Verde claro
+            [253, 231, 37] // Amarillo
+        ]
+    };
+
+    const colors = palettes[style] || palettes['jet'];
+
+    const steps = colors.length - 1;
+
+    const scaledValue = normalizedValue * steps;
+    const index = Math.floor(scaledValue);
+    const ratio = scaledValue - index;
+
+    const colorStart = colors[index];
+    const colorEnd = colors[Math.min(index + 1, steps)];
+
+    const r = Math.round(colorStart[0] + (colorEnd[0] - colorStart[0]) * ratio);
+    const g = Math.round(colorStart[1] + (colorEnd[1] - colorStart[1]) * ratio);
+    const b = Math.round(colorStart[2] + (colorEnd[2] - colorStart[2]) * ratio);
+
+    return {r: r, g: g, b: b};
+}
+
+function get_min_max(variable) {
+    if (!plantadata.Flujos || Object.keys(plantadata.Flujos).length === 0) {
+        return { min: null, max: null }; 
+    }
+
+    let { min, max } = Object.keys(plantadata.Flujos).reduce((acc, flujo) => {
+        let value = plantadata.Flujos[flujo][variable];
+        if (value > acc.max) {
+            acc.max = value;
+        }
+        if (value < acc.min) {
+            acc.min = value;
+        }
+        return acc;
+    }, { min: Infinity, max: -Infinity });
+    return { min: propiedades[variable].to(min), max: propiedades[variable].to(max) };
+}
+
+function visual_color_map(variable, palette='jet'){
+
+    if(!propiedades[variable]){
+        Object.keys(plantadata.Equipos).forEach(equipo=>{
+            plat_app.Scene_objects[equipo].color=null;
+            plat_app.objecto_emissive(plat_app.Scene_objects[equipo].obj,0x000000);
+        });
+    
+        Object.keys(plantadata.Flujos).forEach(flujo=>{
+            plat_app.Scene_objects[flujo].color=null;
+            plat_app.objecto_emissive(plat_app.Scene_objects[flujo].obj,0x000000);
+        });
+
+        clarcolorbar();
+        return;
+    }
+
+    let { min, max }=get_min_max(variable);
+    createColorBar(min, max, 100, propiedades[variable].unidad, 10 ,palette);
+    Object.keys(plantadata.Equipos).forEach(equipo=>{
+        let value=get_equipo_max_varible(variable,plantadata.Equipos[equipo]);
+        let {r,g,b}=getColorForValue(value, min, max, palette);
+        plat_app.Scene_objects[equipo].color=new plat_app.THREE.Color(r/255,g/255,b/255);
+        plat_app.objecto_emissive(plat_app.Scene_objects[equipo].obj,0x000000);
+    });
+
+    Object.keys(plantadata.Flujos).forEach(flujo=>{
+        let {r,g,b}=getColorForValue(propiedades[variable].to(plantadata.Flujos[flujo][variable]), min, max, palette);
+        plat_app.Scene_objects[flujo].color=new plat_app.THREE.Color(r/255,g/255,b/255);
+        plat_app.objecto_emissive(plat_app.Scene_objects[flujo].obj,0x000000);
+    });
+}
+
+function get_equipo_max_varible(variable,equipo){
+    let max=-Infinity;
+    if(!equipo[variable]){
+        Object.keys(equipo.flujos).forEach(flujotype=>{
+            Object.keys(equipo.flujos[flujotype]).forEach(flujo=>{
+                if (equipo.flujos[flujotype][flujo][variable]>max){
+                    max=equipo.flujos[flujotype][flujo][variable];
+                }
+            });
+        });
+    }else{
+        max=equipo[variable];
+    }
+    return propiedades[variable].to(max);
+}
+
+function change_view_variable(infoElement) {
+    let visualizaciones = {
+        "Básica": { siguiente: 'T', nombre: 'Temperatura', palette:'jet'},
+        "Temperatura": { siguiente: 'P', nombre: 'Presión', palette:'viridis'},
+        "Presión": { siguiente: 'F', nombre: 'Flujos', palette:'rainbow'},
+        "Flujos": { siguiente: null, nombre: 'Básica', palette:'jet'},
+    };
+
+    let currentView = infoElement.querySelector('.info_type-view-name').textContent;
+
+    plantadata.vis = {
+        variable:visualizaciones[currentView].siguiente,
+        palette:visualizaciones[currentView].palette
+    };
+
+    visual_color_map(plantadata.vis.variable,plantadata.vis.palette);
+
+    infoElement.querySelector('.info_type-view-name').textContent = visualizaciones[currentView].nombre;
+}
+
+function update_visual_color(){
+    if(plantadata.vis && plantadata.vis.variable){
+        visual_color_map(plantadata.vis.variable,plantadata.vis.palette);
+    }
 }

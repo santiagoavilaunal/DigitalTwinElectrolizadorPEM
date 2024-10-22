@@ -25,7 +25,7 @@ function dinamic_play(even){
     });
     ventanas={};
 
-    socket.emit("dinamico_activar", {'activo':'on','dt':Number(Input_Value[5].input_data*60)});
+    socket.emit("dinamico_activar", {'activo':'on','dt':Number(Input_Value[5].input_data)});
 }
 
 function dinamic_stop() {
@@ -98,4 +98,5 @@ socket.on("dinamics_resultado", (data) => {
         })
     });
 
+    update_visual_color();
 });

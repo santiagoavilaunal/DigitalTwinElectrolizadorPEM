@@ -138,10 +138,12 @@ body{
     border-radius: 0px; /* Radio de borde del thumb */
 }
 
-.ventana h4{
+.ventana h4 {
     color: white;
-    font-size: 17px;
-    margin: 15px;
+    font-size: 13px;
+    margin: 0px;
+    margin-left: 10px;
+    text-align: center;
 }
 
 .table_contenedor{
@@ -185,7 +187,7 @@ body{
     border-top: var(--border_color);
 }
 
-.ventana_titulo{
+.ventana_titulo {
     left: 0px;
     top: 0px;
     width: 100%;
@@ -193,17 +195,18 @@ body{
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-between;
+    align-items: center;
 }
 
-.ventana_close{
-    width: 25px;
-    height: 25px;
+.ventana_close {
+    width: 20px;
+    height: 20px;
     padding: 5px;
     border-radius: 3px;
     text-align: center;
     color: white;
     font-family: sans-serif;
-    font-size: 20px;
+    font-size: 17px;
     font-weight: bold;
     transition: 0.2s;
     cursor: pointer;

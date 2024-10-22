@@ -64,11 +64,11 @@ class Planta:
         }
 
         self.PIDControllers={
-            'VC101':PIDController(-0.5/0.2,-0.5,0, 0, offset=0, min_Mv=0.01, max_Mv=95, activo=False),
-            'VC102':PIDController(-500/0.2,-120,0, 0.3, offset=0.3, min_Mv=0.01, max_Mv=97, activo=False),
-            'VC103':PIDController(-500/0.2,-120,0, 0.3, offset=0.3, min_Mv=0.01, max_Mv=97, activo=False),
-            'VC105':PIDController(-1/14,-0.005,0, 0, offset=0, min_Mv=0.0, max_Mv=200, activo=False),
-            'VC106':PIDController(-20/14,-0.1,0, 0, offset=0, min_Mv=0.0, max_Mv=200, activo=False)
+            'VC101':PIDController(-2.5,-0.5,0, 0, offset=0, min_Mv=0.01, max_Mv=95, activo=False),
+            'VC102':PIDController(1000,0,0, 0.3, offset=0.5, min_Mv=0.01, max_Mv=97, activo=False),
+            'VC103':PIDController(-550,-0.1,0, 0.3, offset=0.3, min_Mv=0.01, max_Mv=97, activo=False),
+            'VC105':PIDController(-10,-0.005,0, 0, offset=0, min_Mv=0.0, max_Mv=200, activo=False),
+            'VC106':PIDController(-0.5,-0.1,0, 0, offset=0, min_Mv=0.0, max_Mv=200, activo=False)
         }
         
         self.T13=T13
@@ -160,6 +160,10 @@ class Planta:
         z0=self.flujos['F13'].z
         la=0.5
         F10=1
+
+        self.flujos['F2'].P=self.flujos['F5'].P
+        self.flujos['F3'].P=self.flujos['F6'].P
+
         for i in range(30):
             self.equipos['EK101'].calcular_temperatura_salida()
             self.equipos['V102'].calcular_temperatura_salida()
@@ -202,9 +206,23 @@ class Planta:
         self.flujos['F8'].P=2*1e+5
         self.flujos['F8'].T=10+273.15
         self.flujos['F8'].update()
+
+        for fname in range(11,15):
+            if fname==13:
+                continue
+
+            self.flujos[f'F{fname}'].T=self.flujos['F13'].T
+            self.flujos[f'F{fname}'].P=self.flujos['F13'].P
+            self.flujos[f'F{fname}'].z=self.flujos['F13'].z
+            self.flujos[f'F{fname}'].F=self.flujos['F13'].F
+
         result = self.equipos['E101'].calcular_flujo_CW()
 
         if result:
+
+            for equipo in self.equipos:
+                self.equipos[equipo].setValuesDinamics()
+
             self.valvulas['VC102'].Ap()
             self.valvulas['VC103'].Ap()
             self.valvulas['VC104'].Ap()
@@ -217,7 +235,7 @@ class Planta:
             self.PIDControllers['VC105'].setpoint=self.Pca*1e-5
             self.PIDControllers['VC105'].offset=self.flujos['F2'].F
 
-            self.PIDControllers['VC106'].setpoint=self.Pca*1e-5
+            self.PIDControllers['VC106'].setpoint=self.Pan*1e-5
             self.PIDControllers['VC106'].offset=self.flujos['F3'].F
         #self.equipos['E101'].calcular_temperatura_salida()
         return result
@@ -228,7 +246,7 @@ class Planta:
         
         start_time = time.time()  # Registra el tiempo de inicio del cálculo
 
-        segment_size = 10
+        segment_size = 1
         num_full_segments = int(self.dt // segment_size)
         remaining_segment = self.dt % segment_size
         
@@ -244,15 +262,46 @@ class Planta:
         return end_time - start_time  # Devuelve la diferencia de tiempo entre el inicio y el final del cálculo
 
     def perform_dynamic_step(self, dt):
+        
+        #start_time = time.time()
         self.equipos['EK101'].dinamico_step(dt)
+        #print('EK101', time.time()-start_time)
+
+        #start_time = time.time()
         self.equipos['V102'].dinamico_step(dt)
+        #print('V102', time.time()-start_time)
+
+        #start_time = time.time()
         self.equipos['V101'].dinamico_step(dt)
+        #print('V101', time.time()-start_time)
+
+        self.flujos['F5'].P=self.equipos['V101'].P
+        self.flujos['F6'].P=self.equipos['V102'].P
+
         #self.equipos['E101'].dinamico_step(dt)
+
+        start_time = time.time()
         self.equipos['E101'].calcular_temperatura_salida()
+        print('E101', time.time()-start_time)
+
+        self.equipos['E101'].dinamico['Tt']['trazas'][0]['x'].append(dt/60 + self.equipos['E101'].dinamico['Tt']['trazas'][0]['x'][-1] if len(self.equipos['E101'].dinamico['Tt']['trazas'][0]['x'])>0 else dt/60)
+        self.equipos['E101'].dinamico['Tt']['trazas'][0]['y'].append(self.equipos['E101'].tubos_temperatura_out-273.15)
+        self.equipos['E101'].dinamico['Ts']['trazas'][0]['x'].append(dt/60 + self.equipos['E101'].dinamico['Ts']['trazas'][0]['x'][-1] if len(self.equipos['E101'].dinamico['Ts']['trazas'][0]['x'])>0 else dt/60)
+        self.equipos['E101'].dinamico['Ts']['trazas'][0]['y'].append(self.equipos['E101'].coraza_temperatura_out-273.15)
+
         self.flujos['F13'].T = self.flujos['F10'].T
         self.flujos['F13'].F = self.flujos['F10'].F
         self.flujos['F13'].z = self.flujos['F10'].z
         self.flujos['F13'].update()
+
+        for fname in range(11,15):
+            if fname==13:
+                continue
+
+            self.flujos[f'F{fname}'].T=self.flujos['F13'].T
+            self.flujos[f'F{fname}'].P=self.flujos['F13'].P
+            self.flujos[f'F{fname}'].z=self.flujos['F13'].z
+            self.flujos[f'F{fname}'].F=self.flujos['F13'].F
 
         if self.PIDControllers['VC101'].activo:
             self.valvulas['VC101'].Q(self.PIDControllers['VC101'].calculate(self.flujos['F13'].T,dt))
@@ -264,12 +313,10 @@ class Planta:
             self.valvulas['VC102'].Q(self.PIDControllers['VC102'].calculate(self.equipos['V101'].Liqlevel,dt))
             
         if self.PIDControllers['VC105'].activo:
-            self.flujos['F2'].F=self.PIDControllers['VC105'].calculate(self.equipos['V102'].P*1e-5,dt)
-            self.flujos['F2'].update()
+            self.flujos['F2'].F=self.PIDControllers['VC105'].calculate(self.equipos['V101'].P*1e-5,dt)
         
         if self.PIDControllers['VC106'].activo:
-            self.flujos['F3'].F=self.PIDControllers['VC106'].calculate(self.equipos['V101'].P*1e-5,dt)
-            self.flujos['F3'].update()
+            self.flujos['F3'].F=self.PIDControllers['VC106'].calculate(self.equipos['V102'].P*1e-5,dt)
 
 
 
