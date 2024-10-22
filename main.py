@@ -124,6 +124,7 @@ async def lazo(sid, data):
         planta.PIDControllers[data['loop']].Ki=data['Ki']
         planta.PIDControllers[data['loop']].Kd=data['Kd']
         planta.PIDControllers[data['loop']].activo=data['activo']
+        planta.PIDControllers[data['loop']].setpoint=data['setpoint']
         planta.PIDControllers[data['loop']].integral=0
         planta.PIDControllers[data['loop']].prev_error=0
         planta.PIDControllers[data['loop']].offset=planta.PIDControllers[data['loop']].Mv
@@ -163,13 +164,12 @@ async def modificar_setpoint(sid, data):
     try:
         if planta is None:
             planta = Planta(**data, sio=sio)
-        else:
-            # Update the planta values
-            planta.I = data['I']
-            planta.Q = data['Q']
-            planta.T13 = data['T13']
-            planta.Pca = data['Pca']
-            planta.Pan = data['Pan']
+        # Update the planta values
+        planta.I = data['I']
+        planta.Q = data['Q']
+        planta.T13 = data['T13']
+        planta.Pca = data['Pca']
+        planta.Pan = data['Pan']
     except:
         logger.warning('No se pudo actualizar los valores')
                 
@@ -256,6 +256,8 @@ def Planta_dinamics(sid):
             res_time = planta.dinamico_step()
             if res_time>0:
                 datos_resultado = planta.printData()
+                if 1-res_time>=0:
+                    time.sleep(1-res_time)
                 send_msg("dinamics_resultado", json.dumps(datos_resultado, cls=NumpyEncoder), room=sid)
             else:
                 logger.warning(f"Error:")
@@ -265,10 +267,6 @@ def Planta_dinamics(sid):
             traceback.print_exc()
         finally:
             calculando = False
-            if 1-res_time>=0:
-                time.sleep(res_time)
-            else:
-                pass
 
 
 def Planta_tasks(sid):
