@@ -138,7 +138,6 @@ If you use this repository in your research:
 
 ## 📎 Enlace al documento completo (PDF)
 
-📄 Puedes consultar el trabajo completo en formato PDF [aquí](./static/assets/Trabajo de grado Santiago Avila Ramirez.pdf)  
-_(Asegúrate de renombrar y subir el archivo PDF con ese nombre al repositorio)_
+📄 Puedes consultar el trabajo completo en formato PDF [aquí]("./static/assets/Trabajo de grado Santiago Avila Ramirez.pdf")  
 
 ---
