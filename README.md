@@ -41,11 +41,8 @@ La interfaz fue desarrollada en Python y permite calcular, simular y visualizar 
 
 ### 🖼️ Captura de pantalla
 
-![Vista de la interfaz](static/assets/logo.png)
-
-### 🎥 Video demostrativo (pendiente)
-
-*Próximamente: video de demostración en YouTube o GitHub Releases.*
+![GUI Screenshot](static/assets/demo1.jpeg)
+![GUI Screenshot](static/assets/demo2.jpeg)
 
 ---
 
